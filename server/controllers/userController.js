@@ -75,15 +75,14 @@ const registerUser = async (req, res) => {
         </div>
       `;
       
-      try {
-        await sendEmail({
-          email: user.email,
-          subject: 'Welcome to Pustak Maza! 📚',
-          html: welcomeHtml
-        });
-      } catch (mailErr) {
+      // Send welcome email in background (asynchronous) to prevent blocking registration response
+      sendEmail({
+        email: user.email,
+        subject: 'Welcome to Pustak Maza! 📚',
+        html: welcomeHtml
+      }).catch(mailErr => {
         console.error('Welcome email failed to send:', mailErr.message);
-      }
+      });
 
       res.status(201).json({
         _id: user._id,
