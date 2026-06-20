@@ -317,8 +317,8 @@ const forgotPassword = async (req, res) => {
     if (emailSent) {
       res.json({ message: 'OTP sent to email successfully' });
     } else {
-      res.json({ 
-        message: 'OTP generated. Email delivery failed (check server log for OTP value).'
+      res.status(500).json({ 
+        message: 'OTP generated but email delivery failed. Please check your SMTP credentials.'
       });
     }
   } catch (error) {
