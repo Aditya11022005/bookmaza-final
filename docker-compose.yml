@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: pustak_maza_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  server:
+    build: ./server
+    container_name: pustak_maza_server
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/pustakmaza
+      - JWT_SECRET=supersecretjwtkeypustakmaza
+      - STRIPE_SECRET_KEY=sk_test_12345
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    container_name: pustak_maza_client
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  mongo_data:

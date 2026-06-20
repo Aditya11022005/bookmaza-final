@@ -1,0 +1,361 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Document, Page, pdfjs } from 'react-pdf';
+import axios from '../api/axios';
+import useAuthStore from '../store/authStore';
+import { 
+  Bookmark, 
+  ZoomIn, 
+  ZoomOut, 
+  Moon, 
+  Sun, 
+  Save, 
+  Download, 
+  BookOpen, 
+  FileText, 
+  ExternalLink,
+  ChevronLeft,
+  Sparkles
+} from 'lucide-react';
+import { toast } from 'sonner';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
+
+const EbookReader = () => {
+  const { user } = useAuthStore();
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [book, setBook] = useState(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (
+        (e.ctrlKey && e.key === 'p') || 
+        (e.ctrlKey && e.key === 's') || 
+        (e.metaKey && e.key === 'p') ||
+        (e.metaKey && e.key === 's')
+      ) {
+        e.preventDefault();
+        toast.warning('Printing and saving this document is disabled for copyright protection.');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+  
+  // Format urls
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [epubUrl, setEpubUrl] = useState('');
+  const [docxUrl, setDocxUrl] = useState('');
+  const [selectedFormat, setSelectedFormat] = useState('pdf'); // 'pdf' | 'epub' | 'docx'
+
+  // PDF state
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [scale, setScale] = useState(1.0);
+
+  // Layout / sync state
+  const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [savingSync, setSavingSync] = useState(false);
+
+  useEffect(() => {
+    const fetchBookAndProgress = async () => {
+      try {
+        const { data: bookData } = await axios.get(`/books/${id}`);
+        setBook(bookData);
+
+        const ebook = bookData.formats?.ebook || {};
+        
+        // Populate specific URLs
+        const pUrl = ebook.pdfUrl || (ebook.fileUrl && ebook.fileUrl.endsWith('.pdf') ? ebook.fileUrl : '');
+        const eUrl = ebook.epubUrl || (ebook.fileUrl && ebook.fileUrl.endsWith('.epub') ? ebook.fileUrl : '');
+        const dUrl = ebook.docxUrl || (ebook.fileUrl && (ebook.fileUrl.endsWith('.docx') || ebook.fileUrl.endsWith('.doc')) ? ebook.fileUrl : '');
+        
+        setPdfUrl(pUrl);
+        setEpubUrl(eUrl);
+        setDocxUrl(dUrl);
+
+        // Determine default active tab format
+        if (pUrl) setSelectedFormat('pdf');
+        else if (eUrl) setSelectedFormat('epub');
+        else if (dUrl) setSelectedFormat('docx');
+        else if (ebook.fileUrl) {
+          // If a fileUrl was uploaded without format separation, inspect its extension
+          const urlStr = ebook.fileUrl.toLowerCase();
+          if (urlStr.includes('.epub')) {
+            setEpubUrl(ebook.fileUrl);
+            setSelectedFormat('epub');
+          } else if (urlStr.includes('.docx') || urlStr.includes('.doc')) {
+            setDocxUrl(ebook.fileUrl);
+            setSelectedFormat('docx');
+          } else {
+            setPdfUrl(ebook.fileUrl);
+            setSelectedFormat('pdf');
+          }
+        }
+
+        // Fetch user progress
+        const { data: progressData } = await axios.get(`/progress/${id}/ebook`);
+        if (progressData && progressData.position > 1) {
+          setPageNumber(progressData.position);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to load ebook reader.');
+        navigate('/library');
+      }
+    };
+    fetchBookAndProgress();
+  }, [id, navigate]);
+
+  const saveProgress = useCallback(async (currentPage, totalPages) => {
+    setSavingSync(true);
+    try {
+      await axios.post('/progress', {
+        bookId: id,
+        format: 'ebook',
+        position: currentPage,
+        percentage: totalPages ? Math.round((currentPage / totalPages) * 100) : 0
+      });
+    } catch (err) {
+      console.error('Failed to sync progress', err);
+    }
+    setSavingSync(false);
+  }, [id]);
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+  };
+
+  const changePage = (offset) => {
+    const newPage = pageNumber + offset;
+    setPageNumber(newPage);
+    saveProgress(newPage, numPages);
+  };
+
+  if (loading) return <div className="text-center py-20 text-xl font-medium animate-pulse text-slate-500 font-poppins">Loading Secure Reader & Syncing Progress...</div>;
+  if (!pdfUrl && !epubUrl && !docxUrl) return <div className="text-center py-20 text-red-500 font-poppins font-bold">No digital format files available for this book.</div>;
+
+  return (
+    <div className={`min-h-screen flex flex-col items-center py-4 md:py-8 px-4 transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+      
+      {/* Top Toolbar */}
+      <div className={`p-4 rounded-3xl shadow-xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all ${darkMode ? 'bg-[#0d1526]/90 text-slate-200 border-white/10' : 'bg-white text-slate-800 border-slate-200'}`}>
+        
+        {/* Left Toolbar Part: Return & DarkMode */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            onClick={() => navigate('/library')} 
+            className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+          >
+            <ChevronLeft size={16} /> Library
+          </button>
+          
+          <button 
+            onClick={() => setDarkMode(!darkMode)} 
+            className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+          >
+            {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />} 
+            {darkMode ? 'Light Theme' : 'Dark Theme'} 
+          </button>
+        </div>
+
+        {/* Center Toolbar Part: Format Tabs Selector */}
+        <div className="flex bg-slate-500/10 p-1.5 rounded-2xl border border-white/5">
+          {pdfUrl && (
+            <button 
+              onClick={() => setSelectedFormat('pdf')} 
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'pdf' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+            >
+              PDF View
+            </button>
+          )}
+          {epubUrl && (
+            <button 
+              onClick={() => setSelectedFormat('epub')} 
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'epub' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+            >
+              EPUB format
+            </button>
+          )}
+          {docxUrl && (
+            <button 
+              onClick={() => setSelectedFormat('docx')} 
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'docx' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+            >
+              Word (DOCX)
+            </button>
+          )}
+        </div>
+
+        {/* Right Toolbar Part: Zoom (PDF only) & Save Indicator */}
+        <div className="flex items-center gap-4">
+          {selectedFormat === 'pdf' && (
+            <div className="flex items-center gap-2 border-r border-slate-600/20 pr-4">
+              <button 
+                onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
+                className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
+              >
+                <ZoomOut size={16}/>
+              </button>
+              <span className="font-mono text-xs font-bold">{Math.round(scale * 100)}%</span>
+              <button 
+                onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
+                className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
+              >
+                <ZoomIn size={16}/>
+              </button>
+            </div>
+          )}
+
+          <div className="text-xs font-black uppercase tracking-wider">
+            {savingSync ? (
+              <span className="animate-pulse flex items-center gap-1.5 text-primary-500"><Save size={14}/> Syncing</span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-green-500"><Bookmark size={14}/> Auto Saved</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* PDF Controls Pagination Bar (only visible when PDF is selected) */}
+      {selectedFormat === 'pdf' && (
+        <div className={`mt-4 mb-6 px-5 py-2.5 rounded-full flex items-center gap-5 shadow-md border ${darkMode ? 'bg-[#0d1526] border-white/5' : 'bg-white border-slate-200'}`}>
+          <button 
+            disabled={pageNumber <= 1} 
+            onClick={() => changePage(-1)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+          >
+            Prev
+          </button>
+          <span className={`font-mono text-sm font-black ${darkMode ? 'text-white' : 'text-slate-800'}`}>
+            Page {pageNumber} of {numPages || '?'}
+          </span>
+          <button 
+            disabled={pageNumber >= numPages}
+            onClick={() => changePage(1)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="w-full max-w-5xl mt-4 flex justify-center">
+        
+        {/* Render PDF Format */}
+        {selectedFormat === 'pdf' && (
+          <div 
+            className="shadow-2xl rounded-2xl overflow-hidden border border-slate-300/30 relative" 
+            style={{ 
+              filter: darkMode ? 'invert(0.9) hue-rotate(180deg) contrast(1.15)' : 'none', 
+              backgroundColor: darkMode ? '#ffffff' : 'transparent',
+            }}
+            onContextMenu={e => e.preventDefault()}
+          >
+            {/* Dynamic Watermark Overlay to prevent piracy/screenshots */}
+            <div className="absolute inset-0 pointer-events-none select-none z-10 flex flex-wrap gap-x-16 gap-y-24 items-center justify-center p-12 overflow-hidden opacity-[0.06] dark:opacity-[0.03]">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="text-slate-800 text-sm font-black tracking-widest uppercase rotate-[-30deg] whitespace-nowrap">
+                  {user?.name || 'Reader'} ({user?.email || 'Pustak Maza'})
+                </div>
+              ))}
+            </div>
+
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              loading={<div className="p-20 font-bold font-poppins animate-pulse text-slate-500">Decrypting & rendering PDF canvas...</div>}
+            >
+              <Page 
+                pageNumber={pageNumber} 
+                scale={scale} 
+                renderTextLayer={false} 
+                renderAnnotationLayer={false} 
+              />
+            </Document>
+          </div>
+        )}
+
+        {/* Render EPUB Format Card */}
+        {selectedFormat === 'epub' && (
+          <div className={`w-full max-w-2xl p-8 md:p-12 rounded-[2.5rem] border text-center shadow-2xl backdrop-blur-md relative overflow-hidden ${darkMode ? 'bg-[#0d1526]/90 border-white/[0.06]' : 'bg-white border-slate-200'}`}>
+            <div className="absolute -top-32 -right-32 w-64 h-64 bg-primary-500/10 rounded-full blur-[60px]" />
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-20 h-20 rounded-3xl bg-primary-600/10 text-primary-400 flex items-center justify-center mb-6 border border-primary-500/20 shadow-inner">
+                <BookOpen size={36} className="text-primary-500" />
+              </div>
+
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-400 bg-primary-500/10 px-3.5 py-1.5 rounded-full border border-primary-500/25 mb-4">Reflowable EPUB File</span>
+              <h3 className={`text-2xl md:text-3xl font-black font-poppins mb-3 ${darkMode ? 'text-white' : 'text-slate-800'}`}>Ready for your E-Reader</h3>
+              
+              <p className={`text-sm font-medium max-w-md mx-auto leading-relaxed mb-8 ${darkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                EPUB is the industry-standard layout for reflowable text. Download this file to read on Kindle, Apple Books, Kobo, or your favorite mobile reading app with customizable fonts and text sizing.
+              </p>
+
+              {/* Massive Premium Download Button */}
+              <a 
+                href={epubUrl}
+                download
+                onClick={() => toast.success("Download started!")}
+                className="inline-flex items-center gap-3 bg-primary-600 hover:bg-primary-500 text-white font-black text-base px-10 py-5 rounded-2xl shadow-xl shadow-primary-600/20 transition-all transform hover:-translate-y-0.5 active:scale-95"
+              >
+                <Download size={20} /> Download EPUB format
+              </a>
+
+              <div className={`mt-8 pt-8 border-t w-full text-xs font-bold ${darkMode ? 'border-white/5 text-slate-500' : 'border-slate-100 text-slate-400'}`}>
+                Digital Rights Reserved. © Pustak Maza Publisher Network.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Render DOCX Format with Web Office Viewer */}
+        {selectedFormat === 'docx' && (
+          <div className="w-full flex flex-col items-center gap-6">
+            
+            {/* Quick Download Banner */}
+            <div className={`w-full p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 ${darkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><FileText size={20}/></div>
+                <span className={`text-sm font-bold ${darkMode ? 'text-slate-200' : 'text-slate-700'}`}>Microsoft Word format (DOCX) is available</span>
+              </div>
+              <a 
+                href={docxUrl}
+                download
+                className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <Download size={14}/> Download DOCX
+              </a>
+            </div>
+
+            {/* Embedded IFrame Viewer */}
+            <div className="w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-350/20 relative group">
+              <iframe 
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(docxUrl)}&embedded=true`} 
+                className="w-full h-[75vh] border-none"
+                title="DOCX Reader"
+              />
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#0f172a]/90 backdrop-blur-md text-white font-bold text-xs px-6 py-2.5 rounded-xl shadow-lg border border-white/15 opacity-0 group-hover:opacity-100 transition-opacity">
+                Office Document Preview Enabled
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+      
+    </div>
+  );
+};
+
+export default EbookReader;

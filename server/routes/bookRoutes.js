@@ -1,0 +1,18 @@
+import express from 'express';
+import {
+  getBooks,
+  getBookById,
+  createBook,
+  updateBook,
+  deleteBook,
+  createBookReview,
+} from '../controllers/bookController.js';
+import { protect, author, admin } from '../middleware/authMiddleware.js';
+
+const router = express.Router();
+
+router.route('/').get(getBooks).post(protect, author, createBook);
+router.route('/:id/reviews').post(protect, createBookReview);
+router.route('/:id').get(getBookById).put(protect, author, updateBook).delete(protect, author, deleteBook);
+
+export default router;

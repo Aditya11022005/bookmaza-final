@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #e9d5ff; /* Light Purple / Lavender */
+  --color-primary-200: #d8b4fe;
+  --color-primary-300: #c084fc;
+  --color-primary-400: #a855f7; /* Medium / Secondary Purple */
+  --color-primary-500: #6a0dad; /* Deep Purple Base */
+  --color-primary-600: #580b94;
+  --color-primary-700: #4c1d95; /* Dark Accent Hover */
+  --color-primary-800: #3b0764;
+  --color-primary-900: #2e1065;
+  
+  --color-accent-50: #f5f3ff;
+  --color-accent-100: #e9d5ff;
+  --color-accent-400: #a855f7;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+}
+
+@layer base {
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap');
+
+  body {
+    @apply bg-[#f8fafc] text-[#1e293b] antialiased selection:bg-primary-500 selection:text-white;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+@layer utilities {
+  .admin-light-mode {
+    filter: invert(1) hue-rotate(180deg);
+    background-color: #f2eadd; /* Inverted equivalent for #0d1526 */
+  }
+  
+  .admin-light-mode img,
+  .admin-light-mode video,
+  .admin-light-mode svg,
+  .admin-light-mode .preserve-colors {
+    filter: invert(1) hue-rotate(180deg);
+  }
+}
+
+/* Custom Audio Player Animations */
+@keyframes audio-bar-1 {
+  0%, 100% { height: 4px; }
+  50% { height: 12px; }
+}
+@keyframes audio-bar-2 {
+  0%, 100% { height: 8px; }
+  50% { height: 4px; }
+}
+@keyframes audio-bar-3 {
+  0%, 100% { height: 3px; }
+  50% { height: 10px; }
+}
+@keyframes bounce-sm {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-audio-bar-1 {
+  animation: audio-bar-1 1s ease-in-out infinite;
+}
+.animate-audio-bar-2 {
+  animation: audio-bar-2 0.8s ease-in-out infinite;
+}
+.animate-audio-bar-3 {
+  animation: audio-bar-3 1.2s ease-in-out infinite;
+}
+.animate-bounce-sm {
+  animation: bounce-sm 2s ease-in-out infinite;
+}

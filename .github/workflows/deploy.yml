@@ -1,0 +1,52 @@
+name: CI/CD Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Test Server Build
+        run: |
+          cd server
+          npm ci
+          node --check index.js
+
+      - name: Test Client Build
+        run: |
+          cd client
+          npm ci
+          npm run build
+
+  deploy-to-aws:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to AWS EC2 via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/pustak-maza
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build

@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /categories
+Allow: /about
+Allow: /contact
+Allow: /book/*
+Allow: /category/*
+
+# Exclude private, authenticated, or utility pages from search results
+Disallow: /admin/
+Disallow: /author/
+Disallow: /profile
+Disallow: /library
+Disallow: /cart
+Disallow: /checkout
+Disallow: /wishlist
+
+# Point search crawlers to your sitemap
+Sitemap: https://booksagapublications.com/sitemap.xml
