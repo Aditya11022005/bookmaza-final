@@ -4,6 +4,40 @@ dotenv.config();
 
 const sendEmail = async (options) => {
   try {
+    // 1. If Brevo API Key is configured, use the HTTP API to bypass SMTP port blocking (port 443)
+    if (process.env.BREVO_API_KEY) {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': process.env.BREVO_API_KEY,
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'Pustak Maza',
+            email: process.env.EMAIL_SENDER || 'contact@booksagapublications.com'
+          },
+          to: [
+            {
+              email: options.email
+            }
+          ],
+          subject: options.subject,
+          htmlContent: options.html
+        })
+      });
+
+      const resData = await response.json();
+      if (response.ok) {
+        console.log(`Email sent successfully via Brevo HTTP API. Message ID: ${resData.messageId}`);
+        return;
+      } else {
+        console.warn('Brevo HTTP API failed, attempting SMTP fallback. Error:', resData.message || resData);
+      }
+    }
+
+    // 2. Mock fallback for local development if credentials aren't set
     if (
       !process.env.EMAIL_USER ||
       !process.env.EMAIL_PASS ||
@@ -19,6 +53,7 @@ const sendEmail = async (options) => {
       return;
     }
 
+    // 3. SMTP Fallback
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: parseInt(process.env.EMAIL_PORT || '465'),
@@ -39,7 +74,7 @@ const sendEmail = async (options) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Email sent: ${info.response}`);
+    console.log(`Email sent via SMTP: ${info.response}`);
   } catch (error) {
     console.error('Error sending email:', error);
   }

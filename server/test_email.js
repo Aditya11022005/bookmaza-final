@@ -1,35 +1,22 @@
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
-dotenv.config();
+import sendEmail from './utils/sendEmail.js';
 
 const testMail = async () => {
-  console.log('Using EMAIL_USER:', process.env.EMAIL_USER);
-  console.log('Using EMAIL_PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '465'),
-    secure: process.env.EMAIL_SECURE !== 'false',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-
-  const mailOptions = {
-    from: `"Pustak Maza" <${process.env.EMAIL_USER}>`, // Google works best when from matches user
-    to: process.env.EMAIL_USER,
-    subject: 'OTP Test Connection',
-    text: 'If you receive this, the Nodemailer SMTP connection is 100% working!',
-  };
-
+  console.log('Testing email service with Brevo HTTP API / SMTP configuration...');
   try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('SUCCESS: Email sent successfully!');
-    console.log('Response:', info.response);
+    await sendEmail({
+      email: 'contact@booksagapublications.com',
+      subject: 'Pustak Maza Connection Test',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
+          <h1 style="color: #6A0DAD; text-align: center;">Pustak Maza</h1>
+          <h2 style="color: #22c55e; text-align: center;">Connection Successful!</h2>
+          <p>If you receive this message, the Brevo integration is 100% working and bypassed all cloud port blocking policies successfully!</p>
+        </div>
+      `
+    });
+    console.log('Done running the test email routine.');
   } catch (error) {
-    console.error('FAILED: Error sending email:');
-    console.error(error);
+    console.error('Test script execution failed:', error);
   }
 };
 
