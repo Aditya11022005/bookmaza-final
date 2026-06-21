@@ -1,4 +1,6 @@
 import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
+import sendEmail from '../utils/sendEmail.js';
 
 // @desc    Get all coupons (Admin)
 // @route   GET /api/coupons
@@ -30,6 +32,36 @@ const createCoupon = async (req, res) => {
       expiryDate,
       usageLimit
     });
+
+    // Asynchronously send notification emails to all registered customers
+    User.find({ role: 'customer' }).select('email name')
+      .then(users => {
+        users.forEach(async (usr) => {
+          try {
+            await sendEmail({
+              email: usr.email,
+              subject: '🎉 New Discount Coupon Alert - Pustak Maza!',
+              html: `
+                <div style="font-family: sans-serif; padding: 20px; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
+                  <h1 style="color: #6A0DAD; text-align: center;">Pustak Maza</h1>
+                  <h2 style="color: #333;">Special Coupon Code: <span style="background-color: #f5f3ff; color: #6A0DAD; padding: 5px 12px; border-radius: 6px; border: 1px dashed #6A0DAD;">${code}</span></h2>
+                  <p>Hi ${usr.name},</p>
+                  <p>A new discount offer has just been created! Enjoy <strong>${discountType === 'percentage' ? `${discountValue}%` : `₹${discountValue}`} off</strong> on your next purchase.</p>
+                  <p><strong>Minimum Purchase Required:</strong> ₹${minPurchaseAmount || 0}</p>
+                  <p><strong>Expiry Date:</strong> ${expiryDate ? new Date(expiryDate).toLocaleDateString() : 'N/A'}</p>
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/shop" style="background-color: #6A0DAD; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Shop Now</a>
+                  </div>
+                  <p style="color: #666; font-size: 11px;">You received this email because you registered on Pustak Maza.</p>
+                </div>
+              `
+            });
+          } catch (e) {
+            console.error(`Failed to send coupon email to ${usr.email}:`, e.message);
+          }
+        });
+      })
+      .catch(err => console.error('Failed to retrieve customers for coupon notify:', err.message));
 
     res.status(201).json(coupon);
   } catch (error) {

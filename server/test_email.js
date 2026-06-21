@@ -7,7 +7,9 @@ const testMail = async () => {
   console.log('Using EMAIL_PASS length:', process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : 0);
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.EMAIL_PORT || '465'),
+    secure: process.env.EMAIL_SECURE !== 'false',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,

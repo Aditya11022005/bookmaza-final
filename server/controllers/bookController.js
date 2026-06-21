@@ -1,4 +1,6 @@
 import Book from '../models/Book.js';
+import User from '../models/User.js';
+import sendEmail from '../utils/sendEmail.js';
 import { translateToMarathi } from '../utils/translator.js';
 
 // @desc    Fetch all books
@@ -105,6 +107,45 @@ const createBook = async (req, res) => {
     });
 
     const createdBook = await book.save();
+
+    // Asynchronously send notification emails to all registered customers about the new book launch
+    if (createdBook.isPublished) {
+      User.find({ role: 'customer' }).select('email name')
+        .then(users => {
+          users.forEach(async (usr) => {
+            try {
+              await sendEmail({
+                email: usr.email,
+                subject: `📚 New Book Launch: "${title}" by ${createdBook.authorName}`,
+                html: `
+                  <div style="font-family: sans-serif; padding: 20px; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
+                    <h1 style="color: #6A0DAD; text-align: center;">Pustak Maza</h1>
+                    <h2 style="color: #333; text-align: center;">New Book Released!</h2>
+                    <div style="text-align: center; margin: 20px 0;">
+                      <img src="${coverImage}" alt="${title}" style="max-height: 250px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
+                    </div>
+                    <h3 style="color: #111; text-align: center; margin-top: 10px;">${title}</h3>
+                    <p style="text-align: center; color: #666; font-weight: bold; margin-bottom: 20px;">By ${createdBook.authorName}</p>
+                    <p>Hi ${usr.name},</p>
+                    <p>We are excited to announce a new book launch on Pustak Maza! Explore our latest publication and get your copy today.</p>
+                    <p style="background-color: #f8fafc; padding: 15px; border-radius: 8px; font-style: italic; color: #444;">
+                      "${description ? description.substring(0, 180) + '...' : 'Explore the full description on our site.'}"
+                    </p>
+                    <div style="text-align: center; margin: 30px 0;">
+                      <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/book/${createdBook._id}" style="background-color: #6A0DAD; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Read / Listen Now</a>
+                    </div>
+                    <p style="color: #666; font-size: 11px;">You received this email because you registered on Pustak Maza.</p>
+                  </div>
+                `
+              });
+            } catch (e) {
+              console.error(`Failed to send new book email to ${usr.email}:`, e.message);
+            }
+          });
+        })
+        .catch(err => console.error('Failed to retrieve customers for book launch notify:', err.message));
+    }
+
     res.status(201).json(createdBook);
   } catch (error) {
     res.status(500).json({ message: error.message });

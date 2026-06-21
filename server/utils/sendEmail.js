@@ -20,15 +20,15 @@ const sendEmail = async (options) => {
     }
 
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '465'),
+      secure: process.env.EMAIL_SECURE !== 'false',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
-      connectionTimeout: 5000, // 5 seconds
-      socketTimeout: 5000,     // 5 seconds
+      connectionTimeout: 8000, // 8 seconds
+      socketTimeout: 8000,     // 8 seconds
     });
 
     const mailOptions = {
