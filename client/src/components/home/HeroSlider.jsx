@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const dummySlides = [
   {
@@ -75,10 +76,12 @@ const HeroSlider = ({ banners = [] }) => {
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 via-transparent to-transparent z-10 opacity-50 pointer-events-none" />
           
           <img
-            src={slides[current].image || slides[current].coverImage}
+            src={getOptimizedImageUrl(slides[current].image || slides[current].coverImage, 1200)}
             alt="Hero Background"
             className="w-full h-full object-cover pointer-events-none"
             draggable="false"
+            fetchPriority={current === 0 ? "high" : "auto"}
+            loading={current === 0 ? "eager" : "lazy"}
           />
           
           {/* Content Block */}
@@ -141,12 +144,14 @@ const HeroSlider = ({ banners = [] }) => {
       <button
         onClick={prevSlide}
         className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 bg-white/15 hover:bg-white/30 backdrop-blur-md border border-white/20 p-2 sm:p-3 rounded-full text-white transition-all sm:opacity-0 sm:group-hover:opacity-100 opacity-80"
+        aria-label="Previous slide"
       >
         <ChevronLeft size={20} />
       </button>
       <button
         onClick={nextSlide}
         className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 bg-white/15 hover:bg-white/30 backdrop-blur-md border border-white/20 p-2 sm:p-3 rounded-full text-white transition-all sm:opacity-0 sm:group-hover:opacity-100 opacity-80"
+        aria-label="Next slide"
       >
         <ChevronRight size={20} />
       </button>

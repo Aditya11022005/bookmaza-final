@@ -5,6 +5,7 @@ import useCartStore from '../store/cartStore';
 import { toast } from 'sonner';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
 
 const SearchResults = () => {
   const location = useLocation();
@@ -128,7 +129,7 @@ const SearchResults = () => {
               {filteredBooks.map(book => (
                 <Link key={book._id} to={`/book/${book._id}`} className="group bg-white border border-[#e2e8f0] rounded-[2rem] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(106,13,173,0.2)] hover:border-primary-200 transition-all duration-500 flex flex-col h-full transform hover:-translate-y-2">
                   <div className="w-full h-80 relative overflow-hidden bg-[#f8fafc] border-b border-[#f1f5f9]">
-                    <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out" />
+                    <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out" />
                   </div>
                   
                   <div className="p-6 flex flex-col flex-grow">

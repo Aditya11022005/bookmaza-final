@@ -8,6 +8,7 @@ import { FORMATS, CATEGORIES } from './Shop';
 import BookSlider from '../components/home/BookSlider';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
 
 // ==========================================
 // PREDEFINED METADATA FOR BANNERS
@@ -81,8 +82,12 @@ const Category = () => {
   useEffect(() => {
     const fetchBooksAndCategories = async () => {
       try {
-        const { data } = await axios.get('/books');
-        const sanitized = data.map(b => ({
+        const [booksRes, categoriesRes] = await Promise.all([
+          axios.get('/books'),
+          axios.get('/categories')
+        ]);
+
+        const sanitized = booksRes.data.map(b => ({
           ...b,
           formats: {
             hardcopy: b.formats?.hardcopy || { price: b.price || 0, stock: 0, isAvailable: false },
@@ -91,9 +96,7 @@ const Category = () => {
           }
         }));
         setBooks(sanitized);
-
-        const { data: catData } = await axios.get('/categories');
-        setCategories(catData || []);
+        setCategories(categoriesRes.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -211,7 +214,7 @@ const Category = () => {
          {/* Full Bleed Image Block */}
          <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
            <div className="absolute inset-0 bg-gradient-to-t from-[#1e293b]/60 via-transparent to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"/>
-           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out relative z-0" />
+           <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out relative z-0" />
          </div>
          
          <div className="p-6 flex flex-col flex-grow relative z-20">

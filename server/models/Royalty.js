@@ -13,5 +13,9 @@ const royaltySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+royaltySchema.index({ author: 1 });
+royaltySchema.index({ book: 1 });
+royaltySchema.index({ status: 1 });
+
 const Royalty = mongoose.model('Royalty', royaltySchema);
 export default Royalty;

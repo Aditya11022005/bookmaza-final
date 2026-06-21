@@ -8,6 +8,7 @@ import BookSlider from '../components/home/BookSlider';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
+import { getOptimizedImageUrl } from '../utils/image';
 import { Document, Page, pdfjs } from 'react-pdf';
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -371,7 +372,7 @@ const BookDetails = () => {
             {/* Main Image */}
             <div className="relative w-full aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl overflow-hidden border border-[#e2e8f0] shadow-[0_15px_40px_-15px_rgba(0,0,0,0.1)] group">
                <img
-                 src={book.images[activeImageIdx]}
+                 src={getOptimizedImageUrl(book.images[activeImageIdx], 600)}
                  alt="Cover"
                  className="w-full h-full object-contain transition-transform duration-700 ease-out group-hover:scale-105 p-2"
                />
@@ -383,7 +384,7 @@ const BookDetails = () => {
             <div className="flex gap-3 overflow-x-auto pb-2">
               {book.images.map((img, idx) => (
                  <button key={idx} onClick={() => { setActiveImageIdx(idx); setAutoSlide(false); }} className={`relative shrink-0 w-20 h-28 sm:w-24 sm:h-32 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-gray-50 ${activeImageIdx === idx ? 'border-primary-500 shadow-[0_8px_20px_rgba(106,13,173,0.3)] scale-[1.02]' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-[1.02]'}`}>
-                    <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-contain p-1"/>
+                    <img src={getOptimizedImageUrl(img, 150)} alt={`Thumb ${idx}`} className="w-full h-full object-contain p-1"/>
                  </button>
               ))}
             </div>
@@ -406,7 +407,7 @@ const BookDetails = () => {
             {/* Author & Trust Row */}
             <div className="flex flex-wrap items-center gap-x-8 gap-y-4 mb-10 pb-10 border-b border-gray-200">
                <div className="flex items-center gap-3">
-                 <img src={book.author.image} alt={book.author.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100"/>
+                 <img src={getOptimizedImageUrl(book.author.image, 150)} alt={book.author.name} className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-100"/>
                  <div>
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-0.5">Author</span>
                     <Link to="#" className="font-extrabold text-lg text-[#1e293b] hover:text-primary-600 transition-colors">{book.author.name}</Link>
@@ -676,7 +677,7 @@ const BookDetails = () => {
                {book.author.bio && book.author.bio !== 'Author biography not updated yet.' ? (
                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-10 relative z-10">
                     <div className="w-40 h-40 shrink-0 rounded-full overflow-hidden border-8 border-white/10 shadow-2xl group-hover:scale-105 transition-transform duration-700">
-                       <img src={book.author.image} alt={book.author.name} className="w-full h-full object-cover"/>
+                       <img src={getOptimizedImageUrl(book.author.image, 300)} alt={book.author.name} className="w-full h-full object-cover"/>
                     </div>
                     <div className="text-center sm:text-left text-white flex-1">
                        <h4 className="text-3xl font-black font-poppins mb-4">{book.author.name}</h4>
@@ -797,7 +798,7 @@ const BookDetails = () => {
                           
                           <div className="p-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
                              <div className="flex items-center gap-6 pb-8 border-b border-gray-100 mb-8">
-                               <img src={book.images[0]} alt="book" className="w-16 h-24 object-cover rounded-lg shadow-sm"/>
+                               <img src={getOptimizedImageUrl(book.images[0], 150)} alt="book" className="w-16 h-24 object-cover rounded-lg shadow-sm"/>
                                <div>
                                  <h5 className="font-extrabold text-[#1e293b] text-xl mb-1">{book.title}</h5>
                                  <p className="text-[#64748b] font-bold">You are reviewing the {selectedFormat} edition.</p>
@@ -1000,7 +1001,7 @@ const BookDetails = () => {
                           {review.images.length > 0 && (
                              <div className="flex gap-4 mb-8">
                                {review.images.map((img, i) => (
-                                 <img key={i} src={img} alt="Review" className="w-32 h-32 object-cover rounded-2xl border-2 border-gray-200 cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all hover:scale-105"/>
+                                 <img key={i} src={getOptimizedImageUrl(img, 300)} alt="Review" className="w-32 h-32 object-cover rounded-2xl border-2 border-gray-200 cursor-pointer hover:border-primary-500 hover:shadow-lg transition-all hover:scale-105"/>
                                ))}
                              </div>
                           )}

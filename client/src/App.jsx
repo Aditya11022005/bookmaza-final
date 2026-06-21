@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import RootLayout from './layouts/RootLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -5,60 +6,63 @@ import AuthorLayout from './layouts/AuthorLayout';
 import AccountLayout from './layouts/AccountLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminAuthors from './pages/admin/AdminAuthors';
-import AdminBooks from './pages/admin/AdminBooks';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminCategories from './pages/admin/AdminCategories';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminBanners from './pages/admin/AdminBanners';
-import AdminCertificates from './pages/admin/AdminCertificates';
-import { AdminReviews, AdminMessages, AdminSubscribers } from './pages/admin/AdminMarketing';
+
+// Admin Pages
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminAuthors = lazy(() => import('./pages/admin/AdminAuthors'));
+const AdminBooks = lazy(() => import('./pages/admin/AdminBooks'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminCertificates = lazy(() => import('./pages/admin/AdminCertificates'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminReviews })));
+const AdminMessages = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMessages })));
+const AdminSubscribers = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminSubscribers })));
 
 // Author Pages
-import AuthorLogin from './pages/author/AuthorLogin';
-import AuthorApplication from './pages/author/AuthorApplication';
-import AuthorDashboard from './pages/author/AuthorDashboard';
-import AuthorUpload from './pages/author/AuthorUpload';
-import AuthorProfile from './pages/author/AuthorProfile';
-import AuthorEarnings from './pages/author/AuthorEarnings';
-import AuthorBooks from './pages/author/AuthorBooks';
-
+const AuthorLogin = lazy(() => import('./pages/author/AuthorLogin'));
+const AuthorApplication = lazy(() => import('./pages/author/AuthorApplication'));
+const AuthorDashboard = lazy(() => import('./pages/author/AuthorDashboard'));
+const AuthorUpload = lazy(() => import('./pages/author/AuthorUpload'));
+const AuthorProfile = lazy(() => import('./pages/author/AuthorProfile'));
+const AuthorEarnings = lazy(() => import('./pages/author/AuthorEarnings'));
+const AuthorBooks = lazy(() => import('./pages/author/AuthorBooks'));
 
 // Client Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import BookDetails from './pages/BookDetails';
-import Cart from './pages/Cart';
-import Library from './pages/Library';
-import EbookReader from './components/EbookReader';
-import AudioPlayer from './components/AudioPlayer';
-import Shop from './pages/Shop';
-import Category from './pages/Category';
-import Categories from './pages/Categories';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import SearchResults from './pages/SearchResults';
-import VerifyEmail from './pages/VerifyEmail';
-import ForgotPassword from './pages/ForgotPassword';
-import VerifyResetOTP from './pages/VerifyResetOTP';
-import ResetPassword from './pages/ResetPassword';
-import Terms from './pages/Terms';
-import FAQ from './pages/FAQ';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import RefundPolicy from './pages/RefundPolicy';
-import ShippingPolicy from './pages/ShippingPolicy';
-import Wishlist from './pages/Wishlist';
-import MyProfile from './pages/MyProfile';
-import MyOrders from './pages/MyOrders';
-import OrderDetails from './pages/OrderDetails';
-import Checkout from './pages/Checkout';
-import OrderSuccess from './pages/OrderSuccess';
-import Subscriptions from './pages/Subscriptions';
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const BookDetails = lazy(() => import('./pages/BookDetails'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Library = lazy(() => import('./pages/Library'));
+const EbookReader = lazy(() => import('./components/EbookReader'));
+const AudioPlayer = lazy(() => import('./components/AudioPlayer'));
+const Shop = lazy(() => import('./pages/Shop'));
+const Category = lazy(() => import('./pages/Category'));
+const Categories = lazy(() => import('./pages/Categories'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const SearchResults = lazy(() => import('./pages/SearchResults'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const VerifyResetOTP = lazy(() => import('./pages/VerifyResetOTP'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Terms = lazy(() => import('./pages/Terms'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy'));
+const ShippingPolicy = lazy(() => import('./pages/ShippingPolicy'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
+const MyProfile = lazy(() => import('./pages/MyProfile'));
+const MyOrders = lazy(() => import('./pages/MyOrders'));
+const OrderDetails = lazy(() => import('./pages/OrderDetails'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const Subscriptions = lazy(() => import('./pages/Subscriptions'));
 
 
 // Stub Client Pages
@@ -73,99 +77,106 @@ const AdminPlaceholder = ({title}) => <div className="p-8 bg-white rounded-2xl s
 const App = () => {
   return (
     <Router>
-      <Routes>
-        
-        {/* Core Application / Storefront */}
-        <Route path="/" element={<RootLayout />}>
-          <Route index element={<Home />} />
-          <Route path="shop" element={<Shop />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="category/:slug" element={<Category />} />
-          <Route path="format/:type" element={<Shop />} />
-          <Route path="book/:id" element={<BookDetails />} />
-          <Route path="authors" element={<Authors />} />
-          <Route path="author/:id" element={<AuthorProfile />} />
-          <Route path="search" element={<SearchResults />} />
-          <Route path="cart" element={<Cart />} />
-          <Route path="checkout" element={<Checkout />} />
-          <Route path="order-success" element={<OrderSuccess />} />
-          <Route path="subscriptions" element={<Subscriptions />} />
+      <Suspense fallback={
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] font-poppins gap-3">
+          <div className="w-12 h-12 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin"></div>
+          <span className="text-[#64748b] font-bold text-sm uppercase tracking-wider animate-pulse">Loading Book Maza...</span>
+        </div>
+      }>
+        <Routes>
           
-          {/* Protected Account Routes */}
-          <Route element={<ProtectedRoute />}>
-             <Route element={<AccountLayout />}>
-                <Route path="account" element={<Navigate to="/profile" replace />} />
-                <Route path="profile" element={<MyProfile />} />
-              <Route path="orders" element={<MyOrders />} />
-              <Route path="orders/:id" element={<OrderDetails />} />
-              <Route path="library" element={<Library />} />
-                <Route path="wishlist" element={<Wishlist />} />
-             </Route>
+          {/* Core Application / Storefront */}
+          <Route path="/" element={<RootLayout />}>
+            <Route index element={<Home />} />
+            <Route path="shop" element={<Shop />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="category/:slug" element={<Category />} />
+            <Route path="format/:type" element={<Shop />} />
+            <Route path="book/:id" element={<BookDetails />} />
+            <Route path="authors" element={<Authors />} />
+            <Route path="author/:id" element={<AuthorProfile />} />
+            <Route path="search" element={<SearchResults />} />
+            <Route path="cart" element={<Cart />} />
+            <Route path="checkout" element={<Checkout />} />
+            <Route path="order-success" element={<OrderSuccess />} />
+            <Route path="subscriptions" element={<Subscriptions />} />
+            
+            {/* Protected Account Routes */}
+            <Route element={<ProtectedRoute />}>
+               <Route element={<AccountLayout />}>
+                  <Route path="account" element={<Navigate to="/profile" replace />} />
+                  <Route path="profile" element={<MyProfile />} />
+                <Route path="orders" element={<MyOrders />} />
+                <Route path="orders/:id" element={<OrderDetails />} />
+                <Route path="library" element={<Library />} />
+                  <Route path="wishlist" element={<Wishlist />} />
+               </Route>
+            </Route>
+            
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+            <Route path="faq" element={<FAQ />} />
+            <Route path="privacy" element={<PrivacyPolicy />} />
+            <Route path="terms" element={<Terms />} />
+            <Route path="refund-policy" element={<RefundPolicy />} />
+            <Route path="shipping-policy" element={<ShippingPolicy />} />
+            
+            <Route path="login" element={<Login />} />
+            <Route path="register" element={<Register />} />
+            <Route path="forgot-password" element={<ForgotPassword />} />
+            <Route path="verify-reset-otp" element={<VerifyResetOTP />} />
+            <Route path="reset-password" element={<ResetPassword />} />
+            <Route path="verify-email" element={<VerifyEmail />} />
+            <Route path="*" element={<Page404 />} />
           </Route>
           
-          <Route path="about" element={<About />} />
-          <Route path="contact" element={<Contact />} />
-          <Route path="faq" element={<FAQ />} />
-          <Route path="privacy" element={<PrivacyPolicy />} />
-          <Route path="terms" element={<Terms />} />
-          <Route path="refund-policy" element={<RefundPolicy />} />
-          <Route path="shipping-policy" element={<ShippingPolicy />} />
+          {/* Fullscreen Media Players */}
+          <Route path="/read/:id" element={<EbookReader />} />
+          <Route path="/listen/:id" element={<AudioPlayer />} />
           
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="forgot-password" element={<ForgotPassword />} />
-          <Route path="verify-reset-otp" element={<VerifyResetOTP />} />
-          <Route path="reset-password" element={<ResetPassword />} />
-          <Route path="verify-email" element={<VerifyEmail />} />
-          <Route path="*" element={<Page404 />} />
-        </Route>
-        
-        {/* Fullscreen Media Players */}
-        <Route path="/read/:id" element={<EbookReader />} />
-        <Route path="/listen/:id" element={<AudioPlayer />} />
-        
-        {/* Admin Dashboard */}
-        {/* /admin       → redirects to /admin/dashboard (via ProtectedAdminRoute) */}
-        {/* /admin/login → public login page */}
-        {/* /admin/dashboard/* → protected */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        
-        <Route path="/admin" element={<ProtectedAdminRoute />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="authors" element={<AdminAuthors />} />
-            <Route path="books" element={<AdminBooks />} />
-            <Route path="categories" element={<AdminCategories />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="payments" element={<AdminPlaceholder title="Stripe Payments Log" />} />
-            <Route path="banners" element={<AdminBanners />} />
-            <Route path="coupons" element={<AdminCoupons />} />
-            <Route path="reviews" element={<AdminReviews />} />
-            <Route path="messages" element={<AdminMessages />} />
-            <Route path="subscribers" element={<AdminSubscribers />} />
-            <Route path="certificates" element={<AdminCertificates />} />
-            <Route path="settings" element={<AdminSettings />} />
+          {/* Admin Dashboard */}
+          {/* /admin       → redirects to /admin/dashboard (via ProtectedAdminRoute) */}
+          {/* /admin/login → public login page */}
+          {/* /admin/dashboard/* → protected */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          <Route path="/admin" element={<ProtectedAdminRoute />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="authors" element={<AdminAuthors />} />
+              <Route path="books" element={<AdminBooks />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="payments" element={<AdminPlaceholder title="Stripe Payments Log" />} />
+              <Route path="banners" element={<AdminBanners />} />
+              <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="reviews" element={<AdminReviews />} />
+              <Route path="messages" element={<AdminMessages />} />
+              <Route path="subscribers" element={<AdminSubscribers />} />
+              <Route path="certificates" element={<AdminCertificates />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
           </Route>
-        </Route>
-
-        {/* Author Portal */}
-        <Route path="/author/login" element={<AuthorLogin />} />
-        <Route path="/author/apply" element={<AuthorApplication />} />
-        
-        <Route path="/author" element={<AuthorLayout />}>
-          <Route index element={<Navigate to="/author/dashboard" replace />} />
-          <Route path="dashboard" element={<AuthorDashboard />} />
-          <Route path="books" element={<AuthorBooks />} />
-          <Route path="upload" element={<AuthorUpload />} />
-          <Route path="status" element={<AdminPlaceholder title="Publishing Approvals" />} />
-          <Route path="earnings" element={<AuthorEarnings />} />
-          <Route path="reviews" element={<AdminPlaceholder title="Fan Reviews" />} />
-          <Route path="profile" element={<AuthorProfile />} />
-        </Route>
-
-      </Routes>
+  
+          {/* Author Portal */}
+          <Route path="/author/login" element={<AuthorLogin />} />
+          <Route path="/author/apply" element={<AuthorApplication />} />
+          
+          <Route path="/author" element={<AuthorLayout />}>
+            <Route index element={<Navigate to="/author/dashboard" replace />} />
+            <Route path="dashboard" element={<AuthorDashboard />} />
+            <Route path="books" element={<AuthorBooks />} />
+            <Route path="upload" element={<AuthorUpload />} />
+            <Route path="status" element={<AdminPlaceholder title="Publishing Approvals" />} />
+            <Route path="earnings" element={<AuthorEarnings />} />
+            <Route path="reviews" element={<AdminPlaceholder title="Fan Reviews" />} />
+            <Route path="profile" element={<AuthorProfile />} />
+          </Route>
+  
+        </Routes>
+      </Suspense>
     </Router>
   );
 };

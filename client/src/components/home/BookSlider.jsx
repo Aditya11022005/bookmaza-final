@@ -5,6 +5,7 @@ import useCartStore from '../../store/cartStore';
 import useAuthStore from '../../store/authStore';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
+import { getOptimizedImageUrl } from '../../utils/image';
 
 const BookSlider = ({ title, subtitle, books, badge, focusFormat }) => {
   const scrollRef = useRef(null);
@@ -151,7 +152,7 @@ const BookSlider = ({ title, subtitle, books, badge, focusFormat }) => {
                {/* Cover Image */}
                <div className="w-full h-44 sm:h-52 md:h-56 relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
-                 <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                 <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                </div>
                
                {/* Content */}

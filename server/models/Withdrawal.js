@@ -17,5 +17,8 @@ const withdrawalSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+withdrawalSchema.index({ author: 1 });
+withdrawalSchema.index({ status: 1 });
+
 const Withdrawal = mongoose.model('Withdrawal', withdrawalSchema);
 export default Withdrawal;

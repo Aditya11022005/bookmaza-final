@@ -122,13 +122,14 @@ const RootLayout = () => {
             <button 
               onClick={() => setIsSearchOpen(true)}
               className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-50 hover:text-primary-600 transition-colors"
+              aria-label="Search books"
             >
               <Search size={20} />
             </button>
-            <Link to="/wishlist" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-50 hover:text-primary-600 transition-colors">
+            <Link to="/wishlist" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-50 hover:text-primary-600 transition-colors" aria-label="View Wishlist">
               <Heart size={20} />
             </Link>
-            <Link to="/cart" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-50 hover:text-primary-600 transition-colors relative">
+            <Link to="/cart" className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-50 hover:text-primary-600 transition-colors relative" aria-label="View Cart">
                <ShoppingCart size={20} />
                {cartCount > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-md border border-white">{cartCount > 99 ? '99+' : cartCount}</span>}
             </Link>
@@ -207,6 +208,7 @@ const RootLayout = () => {
                     <button 
                       onClick={() => setIsSearchOpen(false)}
                       className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all mr-1 sm:mr-2 flex items-center justify-center flex-shrink-0"
+                      aria-label="Close search overlay"
                     >
                       <X size={20} />
                     </button>

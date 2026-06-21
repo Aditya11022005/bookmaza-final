@@ -31,14 +31,16 @@ const MyProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await axios.get('/users/profile');
-        // Merge with existing token to avoid logging out
-        login({ ...data, token: user?.token });
+        const [profileRes, ordersRes] = await Promise.all([
+          axios.get('/users/profile'),
+          axios.get('/orders/myorders')
+        ]);
         
-        // Fetch real orders count
-        const { data: ordersData } = await axios.get('/orders/myorders');
-        if (ordersData) {
-          setOrdersCount(ordersData.length);
+        // Merge with existing token to avoid logging out
+        login({ ...profileRes.data, token: user?.token });
+        
+        if (ordersRes.data) {
+          setOrdersCount(ordersRes.data.length);
         }
       } catch (err) {
         console.error(err);

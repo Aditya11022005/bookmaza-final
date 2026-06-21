@@ -21,11 +21,12 @@ const AuthorEarnings = () => {
 
   const fetchEarningsData = async () => {
     try {
-      const { data: statsData } = await axios.get('/royalties/stats');
-      setStats(statsData);
-
-      const { data: withdrawalsData } = await axios.get('/royalties/withdrawals');
-      setWithdrawals(withdrawalsData);
+      const [statsRes, withdrawalsRes] = await Promise.all([
+        axios.get('/royalties/stats'),
+        axios.get('/royalties/withdrawals')
+      ]);
+      setStats(statsRes.data);
+      setWithdrawals(withdrawalsRes.data);
     } catch (err) {
       console.error(err);
       toast.error('Failed to fetch royalty details');

@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import Settings from '../models/Settings.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
+import jwt from 'jsonwebtoken';
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login
@@ -106,8 +107,8 @@ const registerUser = async (req, res) => {
 const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate('purchasedBooks')
-      .populate('wishlist');
+      .populate('purchasedBooks', 'title authorName coverImage description rating formats')
+      .populate('wishlist', 'title authorName coverImage description rating formats');
     if (user) {
       res.json({
         _id: user._id,
@@ -383,9 +384,29 @@ const googleLogin = async (req, res) => {
       return res.status(400).json({ message: 'Google ID token is required' });
     }
 
-    const decoded = jwt.decode(idToken);
+    let decoded;
+    try {
+      // 1. Try secure online validation
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      if (response.ok) {
+        decoded = await response.json();
+      }
+    } catch (err) {
+      console.warn('Google token online verification failed, falling back to local decode:', err.message);
+    }
+
+    // 2. Local decode fallback if offline
+    if (!decoded) {
+      decoded = jwt.decode(idToken);
+    }
+
     if (!decoded || !decoded.email) {
-      return res.status(400).json({ message: 'Invalid Google token structure' });
+      return res.status(400).json({ message: 'Invalid Google token' });
+    }
+
+    // Verify token audience if verified online
+    if (decoded.aud && decoded.aud !== '217402764320-1u4j6cmr7gfti55ojs5f887jifl0u7h7.apps.googleusercontent.com' && decoded.aud !== process.env.GOOGLE_CLIENT_ID) {
+      return res.status(400).json({ message: 'Google Token audience mismatch' });
     }
 
     const { name, email } = decoded;

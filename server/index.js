@@ -4,6 +4,7 @@ import cors from 'cors';
 import path from 'path';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
+import { compressionMiddleware } from './middleware/compressionMiddleware.js';
 import userRoutes from './routes/userRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
@@ -27,6 +28,7 @@ connectDB();
 
 const app = express();
 
+app.use(compressionMiddleware);
 app.use(cors());
 app.post('/api/orders/webhook', express.raw({ type: 'application/json' }), handleStripeWebhook);
 app.use(express.json());

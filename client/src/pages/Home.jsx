@@ -18,22 +18,16 @@ const Home = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: booksData } = await axios.get('/books');
-        setFeaturedBooks(booksData);
+        const [booksRes, bannersRes, categoriesRes] = await Promise.all([
+          axios.get('/books'),
+          axios.get('/banners'),
+          axios.get('/categories')
+        ]);
+        setFeaturedBooks(booksRes.data);
+        setBanners(bannersRes.data);
+        setCategories(categoriesRes.data);
       } catch (err) {
-        console.error(err);
-      }
-      try {
-        const { data: bannersData } = await axios.get('/banners');
-        setBanners(bannersData);
-      } catch (err) {
-        console.error(err);
-      }
-      try {
-        const { data: catsData } = await axios.get('/categories');
-        setCategories(catsData);
-      } catch (err) {
-        console.error(err);
+        console.error('Error fetching homepage data:', err);
       }
     };
     fetchData();

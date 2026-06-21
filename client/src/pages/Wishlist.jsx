@@ -20,6 +20,7 @@ import {
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
+import { getOptimizedImageUrl } from '../utils/image';
 
 const FormatIcon = ({ format }) => {
   if (format.includes('Ebook')) return <BookOpen size={14} className="mr-1.5" />;
@@ -219,7 +220,7 @@ const Wishlist = () => {
                            className="w-full md:w-36 h-64 md:h-auto rounded-2xl overflow-hidden shrink-0 shadow-sm relative cursor-pointer group-hover:shadow-md transition-shadow bg-gray-50"
                            onClick={() => navigate(`/book/${book._id}`)}
                         >
-                           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                           <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
 

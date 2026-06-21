@@ -7,6 +7,7 @@ import useAuthStore from '../store/authStore';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
 import { toast } from 'sonner';
+import { getOptimizedImageUrl } from '../utils/image';
 
 const LibraryCard = ({ item, onClick }) => {
   const isCompleted = item.progress === 100;
@@ -21,7 +22,7 @@ const LibraryCard = ({ item, onClick }) => {
       onClick={() => onClick(item.type, item.bookId)}
     >
       <div className="relative w-full aspect-[2/3] rounded-[1.5rem] overflow-hidden mb-5 bg-gray-50 border border-gray-100/50 shadow-inner group-hover:shadow-md transition-shadow">
-         <img src={item.coverImage} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" />
+         <img src={getOptimizedImageUrl(item.coverImage, 300)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" />
          
          <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white/90 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-white/20">
             {item.type === 'read' ? <BookOpen size={12} className="text-blue-300"/> : <Headphones size={12} className="text-purple-300"/>}
@@ -84,7 +85,12 @@ const Library = () => {
   useEffect(() => {
     const fetchLibraryData = async () => {
       try {
-        const { data: profile } = await axios.get('/users/profile');
+        const [profileRes, progressRes] = await Promise.all([
+          axios.get('/users/profile'),
+          axios.get('/progress/all')
+        ]);
+        
+        const profile = profileRes.data;
         setPurchasedBooks(profile.purchasedBooks || []);
         
         // Keep Zustand user session synced with populated profile lists
@@ -96,8 +102,7 @@ const Library = () => {
           });
         }
 
-        const { data: progress } = await axios.get('/progress/all');
-        setProgressList(progress || []);
+        setProgressList(progressRes.data || []);
       } catch (err) {
         console.error('Failed to load user library details:', err);
         toast.error('Failed to load latest bookshelf. Showing local items.');

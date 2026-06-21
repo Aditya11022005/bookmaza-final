@@ -6,6 +6,7 @@ import useCartStore from '../store/cartStore';
 import { toast } from 'sonner';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
 
 export const CATEGORIES = ['Fiction', 'Science Fiction', 'Self-Help', 'History', 'Business', 'Biography', 'Romance', 'Science'];
 export const FORMATS = [{ id: 'ebook', label: 'Ebook' }, { id: 'audiobook', label: 'Audiobook' }, { id: 'hardcopy', label: 'Hardcopy' }];
@@ -51,11 +52,12 @@ const Shop = () => {
   useEffect(() => {
     const fetchShopData = async () => {
       try {
-        const { data: booksData } = await axios.get('/books');
-        setBooks(booksData);
-        
-        const { data: categoriesData } = await axios.get('/categories');
-        setCategories(categoriesData || []);
+        const [booksRes, categoriesRes] = await Promise.all([
+          axios.get('/books'),
+          axios.get('/categories')
+        ]);
+        setBooks(booksRes.data);
+        setCategories(categoriesRes.data || []);
       } catch (err) {
         console.error(err);
       }
@@ -176,7 +178,7 @@ const Shop = () => {
          {/* Full Bleed Image Block */}
          <div className="w-full h-64 sm:h-72 relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
-           <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" />
+           <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" />
          </div>
          
          <div className="p-5 flex flex-col flex-grow relative z-20">
