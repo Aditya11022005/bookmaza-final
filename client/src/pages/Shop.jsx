@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, Star, ShoppingCart, Heart, Headphones, BookOpen, Package, ChevronDown } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -10,6 +10,43 @@ import { getOptimizedImageUrl } from '../utils/image';
 
 export const CATEGORIES = ['Fiction', 'Science Fiction', 'Self-Help', 'History', 'Business', 'Biography', 'Romance', 'Science'];
 export const FORMATS = [{ id: 'ebook', label: 'Ebook' }, { id: 'audiobook', label: 'Audiobook' }, { id: 'hardcopy', label: 'Hardcopy' }];
+
+const LazyCard = ({ children }) => {
+  const [isIntersecting, setIsIntersecting] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsIntersecting(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '150px' }
+    );
+
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="h-full min-h-[420px]">
+      {isIntersecting ? children : (
+        <div className="w-full h-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl animate-pulse flex flex-col p-5 min-h-[420px]">
+          <div className="w-full h-64 bg-slate-200 rounded-xl mb-4" />
+          <div className="h-4 bg-slate-200 rounded w-1/4 mb-3" />
+          <div className="h-6 bg-slate-200 rounded w-3/4 mb-3" />
+          <div className="h-4 bg-slate-200 rounded w-1/2 mb-auto" />
+          <div className="h-10 bg-slate-200 rounded-xl w-full" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Helper to get minimum price of any format or the selected formats
 const getBookPrice = (book, formatsFilter) => {
@@ -408,7 +445,9 @@ const FilterPanel = ({
           {filteredBooks.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredBooks.map(book => (
-                <BookCard key={book._id} book={book} />
+                <LazyCard key={book._id}>
+                  <BookCard book={book} />
+                </LazyCard>
               ))}
             </div>
           ) : (
