@@ -33,7 +33,7 @@ const getBookPrice = (book, formatsFilter) => {
 };
 
 const Shop = () => {
-  usePageMeta('Shop', 'Browse our full catalog of ebooks, audiobooks, and hardcopy books. Filter by category, format, and price on Pustak Maza.');
+  usePageMeta('Shop Online - Buy Ebooks, Audiobooks & Hardcopies', 'Browse our full catalog of premium ebooks, audiobooks, and hardcopy novels in Marathi and English. Filter by category, format, and price on Pustak Maza.');
   const [books, setBooks] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');

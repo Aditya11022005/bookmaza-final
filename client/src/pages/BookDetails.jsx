@@ -67,8 +67,8 @@ const BookDetails = () => {
   const [previewScale, setPreviewScale] = useState(1.0);
 
   usePageMeta(
-    book ? `${book.title} | Pustak Maza` : 'Book Details | Pustak Maza',
-    book ? `Buy "${book.title}" by ${book.authorName} as ebook, audiobook or hardcopy on Pustak Maza.` : 'View book details on Pustak Maza.',
+    book ? `${book.title} by ${book.authorName} | Pustak Maza` : 'Book Details | Pustak Maza',
+    book ? (book.description ? book.description.substring(0, 155) + '...' : `Buy "${book.title}" by ${book.authorName} as ebook, audiobook or hardcopy on Pustak Maza.`) : 'View book details on Pustak Maza.',
     true
   );
 

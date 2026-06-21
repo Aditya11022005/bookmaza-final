@@ -10,7 +10,7 @@ import Newsletter from '../components/home/Newsletter';
 import axios from '../api/axios';
 
 const Home = () => {
-  usePageMeta('Home', 'Pustak Maza is a premium publication house offering ebooks, audiobooks, and hardcopy books in English and Marathi.');
+  usePageMeta('Pustak Maza | Buy Marathi & English Books, Ebooks & Audiobooks', 'Pustak Maza is a premium publication house offering ebooks, audiobooks, and hardcopy books in English and Marathi. Self-publish your books with us.', true);
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [banners, setBanners] = useState([]);
   const [categories, setCategories] = useState([]);
