@@ -346,6 +346,59 @@ const BookDetails = () => {
 
   return (
     <div className="bg-[#f8fafc] w-full min-h-screen pb-20 font-inter">
+      {/* 0. SEO SCHEMA STRUCTURED DATA (JSON-LD) */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Book",
+          "name": book.title,
+          "author": {
+            "@type": "Person",
+            "name": book.authorName
+          },
+          "image": book.coverImage,
+          "description": book.description || `Buy "${book.title}" by ${book.authorName} on Pustak Maza. Available in ebook, audiobook, and print editions.`,
+          "workExample": [
+            book.formats?.ebook?.isAvailable && {
+              "@type": "Book",
+              "bookFormat": "https://schema.org/EBook",
+              "offers": {
+                "@type": "Offer",
+                "price": book.formats.ebook.price,
+                "priceCurrency": "INR",
+                "availability": "https://schema.org/InStock"
+              }
+            },
+            book.formats?.audiobook?.isAvailable && {
+              "@type": "Book",
+              "bookFormat": "https://schema.org/AudiobookFormat",
+              "offers": {
+                "@type": "Offer",
+                "price": book.formats.audiobook.price,
+                "priceCurrency": "INR",
+                "availability": "https://schema.org/InStock"
+              }
+            },
+            book.formats?.hardcopy?.isAvailable && {
+              "@type": "Book",
+              "bookFormat": "https://schema.org/Hardcover",
+              "offers": {
+                "@type": "Offer",
+                "price": book.formats.hardcopy.price,
+                "priceCurrency": "INR",
+                "availability": "https://schema.org/InStock"
+              }
+            }
+          ].filter(Boolean),
+          "aggregateRating": book.rating ? {
+            "@type": "AggregateRating",
+            "ratingValue": book.rating,
+            "bestRating": "5",
+            "worstRating": "1",
+            "reviewCount": book.reviews?.length || 1
+          } : undefined
+        })}
+      </script>
       
       {/* 1. STRUCTURAL BREADCRUMBS */}
       <div className="bg-white border-b border-[#e2e8f0] shadow-sm relative z-20">
