@@ -396,23 +396,43 @@ const proxyPdf = async (req, res) => {
 
     let targetUrl = decodedUrl;
     if (decodedUrl.includes('cloudinary.com')) {
-      const cldMatch = decodedUrl.match(/res\.cloudinary\.com\/[^/]+\/([^/]+)\/([^/]+)\/(?:v\d+\/)?(.+)$/);
-      if (cldMatch && cldMatch[1] && cldMatch[2] && cldMatch[3]) {
+      const cldMatch = decodedUrl.match(/res\.cloudinary\.com\/[^/]+\/([^/]+)\/([^/]+)\/(?:v(\d+)\/)?(.+)$/);
+      if (cldMatch && cldMatch[1] && cldMatch[2]) {
         const resourceType = cldMatch[1];
         const deliveryType = cldMatch[2];
-        let publicId = cldMatch[3];
-        publicId = publicId.split('?')[0].split('#')[0];
-        try {
-          const signedUrl = cloudinary.url(publicId, {
-            resource_type: resourceType,
-            type: deliveryType,
-            sign_url: true,
-            secure: true
-          });
-          targetUrl = signedUrl;
-          console.log('[PDF Proxy] Universal signed Cloudinary URL generated:', targetUrl);
-        } catch (signErr) {
-          console.error('Failed to sign Cloudinary URL, using original:', signErr);
+        const version = cldMatch[3];
+        let publicId = cldMatch[4];
+        
+        if (publicId) {
+          publicId = publicId.split('?')[0].split('#')[0];
+          try {
+            const options = {
+              resource_type: resourceType,
+              type: deliveryType,
+              sign_url: true,
+              secure: true
+            };
+            
+            if (version) {
+              options.version = version;
+            }
+
+            let cleanPublicId = publicId;
+            if (resourceType !== 'raw') {
+              const extIndex = publicId.lastIndexOf('.');
+              if (extIndex !== -1) {
+                cleanPublicId = publicId.substring(0, extIndex);
+                const format = publicId.substring(extIndex + 1);
+                options.format = format;
+              }
+            }
+
+            const signedUrl = cloudinary.url(cleanPublicId, options);
+            targetUrl = signedUrl;
+            console.log('[PDF Proxy] Universal signed Cloudinary URL generated with options:', options, 'targetUrl:', targetUrl);
+          } catch (signErr) {
+            console.error('Failed to sign Cloudinary URL, using original:', signErr);
+          }
         }
       }
     }
