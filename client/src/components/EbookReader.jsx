@@ -4,7 +4,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from '../api/axios';
-import { resolveMediaUrl } from '../utils/image';
+import { resolveMediaUrl, getPdfProxyUrl } from '../utils/image';
 import useAuthStore from '../store/authStore';
 import { 
   Bookmark, 
@@ -79,7 +79,7 @@ const EbookReader = () => {
         const eUrl = ebook.epubUrl || (ebook.fileUrl && ebook.fileUrl.endsWith('.epub') ? ebook.fileUrl : '');
         const dUrl = ebook.docxUrl || (ebook.fileUrl && (ebook.fileUrl.endsWith('.docx') || ebook.fileUrl.endsWith('.doc')) ? ebook.fileUrl : '');
         
-        setPdfUrl(resolveMediaUrl(pUrl));
+        setPdfUrl(pUrl ? getPdfProxyUrl(pUrl) : '');
         setEpubUrl(resolveMediaUrl(eUrl));
         setDocxUrl(resolveMediaUrl(dUrl));
 
@@ -97,7 +97,7 @@ const EbookReader = () => {
             setDocxUrl(resolveMediaUrl(ebook.fileUrl));
             setSelectedFormat('docx');
           } else {
-            setPdfUrl(resolveMediaUrl(ebook.fileUrl));
+            setPdfUrl(getPdfProxyUrl(ebook.fileUrl));
             setSelectedFormat('pdf');
           }
         }

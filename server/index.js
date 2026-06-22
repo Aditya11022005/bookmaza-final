@@ -36,6 +36,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 
+app.get('/', (req, res) => {
+  res.send('Pustak Maza Server is running...');
+});
+
 app.get('/api', (req, res) => {
   res.send('Pustak Maza API is running...');
 });

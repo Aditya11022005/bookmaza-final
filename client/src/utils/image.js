@@ -63,3 +63,22 @@ export const resolveMediaUrl = (url) => {
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
   return `${backendBase}${cleanPath}`;
 };
+
+/**
+ * Wraps a PDF URL in our backend proxy URL to bypass CORS and download issues.
+ *
+ * @param {string} pdfUrl - The original PDF URL.
+ * @returns {string} - The proxy-wrapped URL.
+ */
+export const getPdfProxyUrl = (pdfUrl) => {
+  if (!pdfUrl || typeof pdfUrl !== 'string') return '';
+  
+  // First, resolve the media URL to absolute
+  const resolvedUrl = resolveMediaUrl(pdfUrl);
+  
+  // Get API URL (default to localhost if not set)
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
+  // Return the backend proxy endpoint wrapping the resolved URL
+  return `${apiUrl}/books/pdf-proxy?url=${encodeURIComponent(resolvedUrl)}`;
+};

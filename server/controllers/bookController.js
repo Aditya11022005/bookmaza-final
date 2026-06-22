@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { Readable } from 'stream';
 import Book from '../models/Book.js';
 import User from '../models/User.js';
 import sendEmail from '../utils/sendEmail.js';
@@ -334,4 +337,48 @@ const deleteBookReview = async (req, res) => {
   }
 };
 
-export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview, deleteBookReview };
+// @desc    Proxy PDF files to avoid CORS issues
+// @route   GET /api/books/pdf-proxy
+const proxyPdf = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ message: 'URL query parameter is required' });
+    }
+
+    const decodedUrl = decodeURIComponent(url);
+
+    // 1. Check if it's a local file inside public/uploads to serve it directly
+    if (decodedUrl.includes('/uploads/')) {
+      const pathIndex = decodedUrl.indexOf('/uploads/');
+      const relativePath = decodedUrl.substring(pathIndex); // e.g. /uploads/filename.pdf
+      const filePath = path.join(process.cwd(), 'public', relativePath);
+      
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
+        return res.sendFile(filePath);
+      }
+    }
+
+    // 2. Fetch the remote PDF (Cloudinary, S3, etc.)
+    const response = await fetch(decodedUrl);
+    if (!response.ok) {
+      return res.status(response.status).json({ message: `Failed to fetch PDF: ${response.statusText}` });
+    }
+
+    // Set headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
+
+    // Pipe the response body stream to the client
+    Readable.fromWeb(response.body).pipe(res);
+  } catch (error) {
+    console.error('PDF proxy error:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview, deleteBookReview, proxyPdf };

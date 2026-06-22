@@ -8,7 +8,7 @@ import BookSlider from '../components/home/BookSlider';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
-import { getOptimizedImageUrl, resolveMediaUrl } from '../utils/image';
+import { getOptimizedImageUrl, resolveMediaUrl, getPdfProxyUrl } from '../utils/image';
 import { Document, Page, pdfjs } from 'react-pdf';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
@@ -84,7 +84,7 @@ const BookDetails = () => {
         flipkartLink: data.flipkartLink || '',
         pothiLink: data.pothiLink || '',
         author: data.author ? {
-          name: data.author.name || data.authorName || 'Unknown Author',
+          name: data.authorName || data.author.name || 'Unknown Author',
           bio: data.author.bio || 'Author biography not updated yet.',
           image: data.author.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400'
         } : {
@@ -1219,7 +1219,7 @@ const BookDetails = () => {
             <div className="flex-1 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-auto relative border border-white/10 p-4 flex justify-center items-start">
                <div>
                  <Document
-                   file={resolveMediaUrl(book.formats.ebook?.pdfUrl)}
+                   file={getPdfProxyUrl(book.formats.ebook?.pdfUrl)}
                    onLoadSuccess={({ numPages }) => setPreviewNumPages(numPages)}
                    loading={<div className="p-20 font-bold text-slate-500 animate-pulse text-center">Loading Preview...</div>}
                  >
