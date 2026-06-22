@@ -816,9 +816,9 @@ const AdminBooks = () => {
                       </div>
                       {ebookAvailable && (
                         <div className="space-y-4 pt-2">
-                          <div className="flex gap-4 max-w-md">
-                            <div className="flex-1">
-                              <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">E-Book Price (₹)</label>
+                          <div className="max-w-md">
+                            <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">E-Book Price (₹)</label>
+                            <div className="flex items-center gap-3">
                               <input 
                                 type="number" 
                                 min="0"
@@ -826,11 +826,9 @@ const AdminBooks = () => {
                                 value={ebookFree ? 0 : ebookPrice}
                                 onChange={(e) => setEbookPrice(e.target.value)}
                                 placeholder="299" 
-                                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50" 
+                                className="w-40 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50 focus:outline-none focus:border-primary-500/50" 
                               />
-                            </div>
-                            <div className="flex items-end pb-1.5">
-                              <label className="flex items-center gap-2 text-xs text-slate-300 font-bold uppercase tracking-wider cursor-pointer">
+                              <label className="flex items-center gap-2 text-xs text-slate-300 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">
                                 <input 
                                   type="checkbox" 
                                   checked={ebookFree}
@@ -842,7 +840,7 @@ const AdminBooks = () => {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                             {/* PDF File */}
                             <div className="space-y-1.5">
                               <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest">PDF format URL</label>
@@ -852,9 +850,9 @@ const AdminBooks = () => {
                                   value={ebookPdf}
                                   onChange={(e) => setEbookPdf(e.target.value)}
                                   placeholder="PDF URL" 
-                                  className="flex-1 bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2 placeholder:text-slate-600" 
+                                  className="w-full min-w-0 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-slate-600 focus:outline-none focus:border-primary-500/50" 
                                 />
-                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-2 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap">
+                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-3 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap shrink-0">
                                   PDF
                                   <input 
                                     type="file" 
@@ -875,9 +873,9 @@ const AdminBooks = () => {
                                   value={ebookEpub}
                                   onChange={(e) => setEbookEpub(e.target.value)}
                                   placeholder="EPUB URL" 
-                                  className="flex-1 bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2 placeholder:text-slate-600" 
+                                  className="w-full min-w-0 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-slate-600 focus:outline-none focus:border-primary-500/50" 
                                 />
-                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-2 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap">
+                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-3 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap shrink-0">
                                   EPUB
                                   <input 
                                     type="file" 
@@ -898,9 +896,9 @@ const AdminBooks = () => {
                                   value={ebookDocx}
                                   onChange={(e) => setEbookDocx(e.target.value)}
                                   placeholder="DOCX URL" 
-                                  className="flex-1 bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2 placeholder:text-slate-600" 
+                                  className="w-full min-w-0 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-slate-600 focus:outline-none focus:border-primary-500/50" 
                                 />
-                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-2 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap">
+                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-3 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap shrink-0">
                                   DOCX
                                   <input 
                                     type="file" 
@@ -931,10 +929,10 @@ const AdminBooks = () => {
                       </div>
                       {audiobookAvailable && (
                         <div className="space-y-4 pt-2">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="flex gap-2">
-                              <div className="flex-1">
-                                <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Audio Price (₹)</label>
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                            <div className="lg:col-span-3">
+                              <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Audio Price (₹)</label>
+                              <div className="flex items-center gap-2">
                                 <input 
                                   type="number" 
                                   min="0"
@@ -942,10 +940,8 @@ const AdminBooks = () => {
                                   value={audiobookFree ? 0 : audiobookPrice}
                                   onChange={(e) => setAudiobookPrice(e.target.value)}
                                   placeholder="399" 
-                                  className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50" 
+                                  className="w-full min-w-0 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50 focus:outline-none focus:border-primary-500/50" 
                                 />
-                              </div>
-                              <div className="flex items-end pb-1.5">
                                 <label className="flex items-center gap-1.5 text-[10px] text-slate-300 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">
                                   <input 
                                     type="checkbox" 
@@ -953,31 +949,31 @@ const AdminBooks = () => {
                                     onChange={(e) => setAudiobookFree(e.target.checked)}
                                     className="w-3.5 h-3.5 rounded border-white/20 bg-white/5 accent-primary-500" 
                                   />
-                                  Make Free
+                                  Free
                                 </label>
                               </div>
                             </div>
-                            <div>
+                            <div className="lg:col-span-3">
                               <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Duration (e.g. 5h 20m)</label>
                               <input 
                                 type="text" 
                                 value={audiobookDuration}
                                 onChange={(e) => setAudiobookDuration(e.target.value)}
                                 placeholder="e.g. 6 hours" 
-                                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2" 
+                                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-primary-500/50" 
                               />
                             </div>
-                            <div>
+                            <div className="lg:col-span-6">
                               <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Main / Intro Audio File URL</label>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 w-full min-w-0">
                                 <input 
                                   type="text" 
                                   value={audiobookFile}
                                   onChange={(e) => setAudiobookFile(e.target.value)}
                                   placeholder="Paste URL or upload" 
-                                  className="flex-1 bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2 placeholder:text-slate-600" 
+                                  className="w-full min-w-0 bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-3 py-2 placeholder:text-slate-600 focus:outline-none focus:border-primary-500/50" 
                                 />
-                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-3 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap">
+                                <div className="relative bg-primary-600/20 text-primary-400 hover:bg-primary-600/30 border border-primary-500/20 px-3 py-2 rounded-xl flex items-center justify-center cursor-pointer text-xs font-bold whitespace-nowrap shrink-0">
                                   Upload File
                                   <input 
                                     type="file" 
