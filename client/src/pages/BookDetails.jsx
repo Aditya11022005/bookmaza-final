@@ -10,8 +10,9 @@ import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
 import { getOptimizedImageUrl, resolveMediaUrl } from '../utils/image';
 import { Document, Page, pdfjs } from 'react-pdf';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const REVIEWS_MOCK = [
   { id: 1, name: "Arjun Desai", rating: 5, date: "October 12, 2024", verified: true, title: "A masterpiece of modern publication!", text: "This book completely changed my perspective. The bilingual pacing is incredible, the Marathi translation hits very profoundly. Pustak Maza definitely produced a premium hardcover. The spacing and typography is top notch.", images: ["https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&q=80&w=400"] },

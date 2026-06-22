@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from '../api/axios';
 import { resolveMediaUrl } from '../utils/image';
@@ -23,7 +24,7 @@ import { toast } from 'sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const EbookReader = () => {
   const { user } = useAuthStore();
