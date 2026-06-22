@@ -206,7 +206,30 @@ const updateBook = async (req, res) => {
       book.title = title || book.title;
       book.description = description || book.description;
       book.category = category || book.category;
-      book.formats = formats || book.formats;
+      if (formats) {
+        if (formats.ebook) {
+          book.formats.ebook.isAvailable = formats.ebook.isAvailable !== undefined ? formats.ebook.isAvailable : book.formats.ebook.isAvailable;
+          book.formats.ebook.isFree = formats.ebook.isFree !== undefined ? formats.ebook.isFree : book.formats.ebook.isFree;
+          book.formats.ebook.price = formats.ebook.price !== undefined ? formats.ebook.price : book.formats.ebook.price;
+          book.formats.ebook.fileUrl = formats.ebook.fileUrl !== undefined ? formats.ebook.fileUrl : book.formats.ebook.fileUrl;
+          book.formats.ebook.pdfUrl = formats.ebook.pdfUrl !== undefined ? formats.ebook.pdfUrl : book.formats.ebook.pdfUrl;
+          book.formats.ebook.epubUrl = formats.ebook.epubUrl !== undefined ? formats.ebook.epubUrl : book.formats.ebook.epubUrl;
+          book.formats.ebook.docxUrl = formats.ebook.docxUrl !== undefined ? formats.ebook.docxUrl : book.formats.ebook.docxUrl;
+        }
+        if (formats.audiobook) {
+          book.formats.audiobook.isAvailable = formats.audiobook.isAvailable !== undefined ? formats.audiobook.isAvailable : book.formats.audiobook.isAvailable;
+          book.formats.audiobook.isFree = formats.audiobook.isFree !== undefined ? formats.audiobook.isFree : book.formats.audiobook.isFree;
+          book.formats.audiobook.price = formats.audiobook.price !== undefined ? formats.audiobook.price : book.formats.audiobook.price;
+          book.formats.audiobook.fileUrl = formats.audiobook.fileUrl !== undefined ? formats.audiobook.fileUrl : book.formats.audiobook.fileUrl;
+          book.formats.audiobook.duration = formats.audiobook.duration !== undefined ? formats.audiobook.duration : book.formats.audiobook.duration;
+          book.formats.audiobook.chapters = formats.audiobook.chapters !== undefined ? formats.audiobook.chapters : book.formats.audiobook.chapters;
+        }
+        if (formats.hardcopy) {
+          book.formats.hardcopy.isAvailable = formats.hardcopy.isAvailable !== undefined ? formats.hardcopy.isAvailable : book.formats.hardcopy.isAvailable;
+          book.formats.hardcopy.price = formats.hardcopy.price !== undefined ? formats.hardcopy.price : book.formats.hardcopy.price;
+          book.formats.hardcopy.stock = formats.hardcopy.stock !== undefined ? formats.hardcopy.stock : book.formats.hardcopy.stock;
+        }
+      }
       book.coverImage = coverImage || book.coverImage;
       book.images = Array.isArray(images) ? images : book.images;
       book.isPublished = isPublished !== undefined ? isPublished : book.isPublished;
@@ -238,6 +261,7 @@ const updateBook = async (req, res) => {
         book.summaryMr = nextSummaryMr;
       }
 
+      book.markModified('formats');
       const updatedBook = await book.save();
       res.json(updatedBook);
     } else {
@@ -373,11 +397,31 @@ const proxyPdf = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
 
-    // Pipe the response body stream to the client
-    Readable.fromWeb(response.body).pipe(res);
+    // Handle buffer conversion as fallback if stream piping fails or is unsupported
+    try {
+      if (response.body && typeof Readable.fromWeb === 'function') {
+        Readable.fromWeb(response.body).pipe(res);
+      } else {
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+      }
+    } catch (streamError) {
+      console.warn('Streaming failed, falling back to buffer:', streamError.message);
+      try {
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+      } catch (bufError) {
+        console.error('Buffer fallback failed:', bufError);
+        if (!res.headersSent) {
+          res.status(500).json({ message: `Failed to stream PDF: ${streamError.message}` });
+        }
+      }
+    }
   } catch (error) {
     console.error('PDF proxy error:', error);
-    res.status(500).json({ message: error.message });
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
 

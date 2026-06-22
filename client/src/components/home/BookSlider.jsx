@@ -105,10 +105,20 @@ const BookSlider = ({ title, subtitle, books, badge, focusFormat }) => {
         className="flex gap-3 sm:gap-5 overflow-x-auto pb-6 snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        {books.map((book, index) => {
-           let cardFormat = focusFormat || 'ebook';
-           if (!focusFormat && book.formats?.hardcopy) cardFormat = 'hardcopy';
-           const displayPrice = book.formats[cardFormat]?.price ?? book.price;
+         {books.map((book, index) => {
+            let cardFormat = focusFormat;
+            if (!cardFormat) {
+              if (book.formats?.hardcopy?.isAvailable) {
+                cardFormat = 'hardcopy';
+              } else if (book.formats?.ebook?.isAvailable) {
+                cardFormat = 'ebook';
+              } else if (book.formats?.audiobook?.isAvailable) {
+                cardFormat = 'audiobook';
+              } else {
+                cardFormat = 'ebook';
+              }
+            }
+            const displayPrice = book.formats[cardFormat]?.price ?? book.price ?? 0;
 
            return (
              <Link

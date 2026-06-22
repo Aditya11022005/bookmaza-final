@@ -53,7 +53,7 @@ const SearchResults = () => {
 
   const handleAddToCart = (e, book) => {
     e.preventDefault();
-    const defaultFormat = book.formats?.hardcopy ? 'hardcopy' : book.formats?.ebook ? 'ebook' : 'audiobook';
+    const defaultFormat = book.formats?.hardcopy?.isAvailable ? 'hardcopy' : book.formats?.ebook?.isAvailable ? 'ebook' : 'audiobook';
     addToCart({ 
       book: book._id, 
       title: book.title, 
@@ -67,7 +67,7 @@ const SearchResults = () => {
 
   const handleBuyNow = (e, book) => {
     e.preventDefault();
-    const defaultFormat = book.formats?.hardcopy ? 'hardcopy' : book.formats?.ebook ? 'ebook' : 'audiobook';
+    const defaultFormat = book.formats?.hardcopy?.isAvailable ? 'hardcopy' : book.formats?.ebook?.isAvailable ? 'ebook' : 'audiobook';
     const buyNowItem = {
       book: book._id,
       title: book.title,
@@ -133,19 +133,27 @@ const SearchResults = () => {
                   </div>
                   
                   <div className="p-6 flex flex-col flex-grow">
-                    <span className="text-[11px] text-primary-600 font-black uppercase tracking-[0.2em] mb-2">{book.category?.name || book.category}</span>
-                    <h3 className="font-extrabold text-xl leading-snug text-[#1e293b] mb-1.5 line-clamp-2 group-hover:text-primary-600 transition-colors font-poppins">{book.title}</h3>
-                    <p className="text-sm text-[#64748b] font-bold uppercase tracking-widest mb-6 flex-grow">{book.authorName}</p>
-                    
-                    <div className="flex justify-between items-end mb-6">
-                      <div className="flex flex-col">
-                        <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Price</span>
-                        <span className="text-3xl font-black text-[#1e293b] leading-none text-primary-700 font-poppins">₹{book.price}</span>
-                      </div>
-                      <div className="flex items-center text-primary-600 font-black text-sm bg-primary-50 px-2.5 py-1 rounded-lg border border-primary-100">
-                         <Star size={14} fill="currentColor" className="mr-1.5"/> {book.rating}
-                      </div>
-                    </div>
+                    {(() => {
+                      const defaultFormat = book.formats?.hardcopy?.isAvailable ? 'hardcopy' : book.formats?.ebook?.isAvailable ? 'ebook' : 'audiobook';
+                      const renderPrice = book.formats?.[defaultFormat]?.price ?? book.price ?? 0;
+                      return (
+                        <>
+                          <span className="text-[11px] text-primary-600 font-black uppercase tracking-[0.2em] mb-2">{book.category?.name || book.category}</span>
+                          <h3 className="font-extrabold text-xl leading-snug text-[#1e293b] mb-1.5 line-clamp-2 group-hover:text-primary-600 transition-colors font-poppins">{book.title}</h3>
+                          <p className="text-sm text-[#64748b] font-bold uppercase tracking-widest mb-6 flex-grow">{book.authorName}</p>
+                          
+                          <div className="flex justify-between items-end mb-6">
+                            <div className="flex flex-col">
+                              <span className="text-[11px] text-gray-400 font-extrabold uppercase tracking-widest mb-1">Price</span>
+                              <span className={`text-3xl font-black leading-none font-poppins ${renderPrice === 0 ? "text-emerald-600" : "text-[#1e293b]"}`}>{renderPrice === 0 ? "Free" : `₹${renderPrice}`}</span>
+                            </div>
+                            <div className="flex items-center text-primary-600 font-black text-sm bg-primary-50 px-2.5 py-1 rounded-lg border border-primary-100">
+                               <Star size={14} fill="currentColor" className="mr-1.5"/> {book.rating || 5.0}
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
 
                     <div className="flex gap-3">
                       <button onClick={(e) => handleBuyNow(e, book)} className="flex-1 py-4 rounded-xl bg-primary-500 text-white font-black flex items-center justify-center gap-2 hover:bg-primary-600 shadow-lg transition-all">

@@ -83,13 +83,13 @@ const BookDetails = () => {
         amazonLink: data.amazonLink || '',
         flipkartLink: data.flipkartLink || '',
         pothiLink: data.pothiLink || '',
-        author: data.author ? {
+        author: (data.author && data.author.name !== 'Super Admin' && data.author.role !== 'admin') ? {
           name: data.authorName || data.author.name || 'Unknown Author',
           bio: data.author.bio || 'Author biography not updated yet.',
           image: data.author.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400'
         } : {
           name: data.authorName || 'Unknown Author',
-          bio: 'Author biography not updated yet.',
+          bio: data.authorName ? `${data.authorName} is an esteemed author publishing with Pustak Maza.` : 'Author biography not updated yet.',
           image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400'
         },
         formats: {

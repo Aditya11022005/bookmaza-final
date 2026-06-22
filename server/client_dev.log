@@ -1,0 +1,10 @@
+
+> client@0.0.0 dev
+> vite
+
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ drop: [ 'console', 'debugger' ] }`
+
+  VITE v8.0.13  ready in 558 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
