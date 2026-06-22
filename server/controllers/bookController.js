@@ -447,30 +447,20 @@ const proxyPdf = async (req, res) => {
       return res.status(response.status).json({ message: `Failed to fetch PDF: ${response.statusText}` });
     }
 
-    // Set headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
-
-    // Handle buffer conversion as fallback if stream piping fails or is unsupported
     try {
-      if (response.body && typeof Readable.fromWeb === 'function') {
-        Readable.fromWeb(response.body).pipe(res);
-      } else {
-        const arrayBuffer = await response.arrayBuffer();
-        res.send(Buffer.from(arrayBuffer));
-      }
-    } catch (streamError) {
-      console.warn('Streaming failed, falling back to buffer:', streamError.message);
-      try {
-        const arrayBuffer = await response.arrayBuffer();
-        res.send(Buffer.from(arrayBuffer));
-      } catch (bufError) {
-        console.error('Buffer fallback failed:', bufError);
-        if (!res.headersSent) {
-          res.status(500).json({ message: `Failed to stream PDF: ${streamError.message}` });
-        }
-      }
+      const arrayBuffer = await response.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      console.log('[PDF Proxy] Successfully read PDF into buffer of size:', buffer.length);
+      
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
+      res.setHeader('Content-Length', buffer.length);
+      
+      return res.send(buffer);
+    } catch (bufError) {
+      console.error('[PDF Proxy] Buffer resolution failed:', bufError);
+      return res.status(500).json({ message: 'Failed to read PDF stream into buffer' });
     }
   } catch (error) {
     console.error('PDF proxy error:', error);
