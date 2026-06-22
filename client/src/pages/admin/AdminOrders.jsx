@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Eye, Filter, CheckCircle2, Clock, XCircle, Truck, Loader, X, Calendar, MapPin, CreditCard, ShoppingBag, Mail, Phone, User as UserIcon } from 'lucide-react';
+import { Search, Eye, Filter, CheckCircle2, Clock, XCircle, Truck, Loader, X, Calendar, MapPin, CreditCard, ShoppingBag, Mail, Phone, Download, User as UserIcon } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -99,6 +99,53 @@ const AdminOrders = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (orders.length === 0) {
+      toast.error('No orders to export');
+      return;
+    }
+
+    const headers = [
+      'Order ID',
+      'Customer Name',
+      'Customer Email',
+      'Date',
+      'Total Amount (INR)',
+      'Payment Status',
+      'Payment Method',
+      'Delivery Status',
+      'Courier Partner',
+      'Tracking Number',
+      'Items Count'
+    ];
+
+    const rows = orders.map(o => [
+      o._id,
+      o.user?.name || 'Guest User',
+      o.user?.email || 'N/A',
+      new Date(o.createdAt).toLocaleDateString(),
+      o.totalPrice,
+      o.isPaid ? 'Paid' : 'Unpaid',
+      o.paymentMethod,
+      o.status,
+      o.courierPartner || 'Shiprocket',
+      o.trackingNumber || 'N/A',
+      o.orderItems?.length || 0
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `bookmaza_sales_report_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Sales report CSV downloaded successfully!');
+  };
+
   const filteredOrders = orders.filter(o => {
     const searchMatch = 
       (o._id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -117,6 +164,13 @@ const AdminOrders = () => {
           <h1 className="text-2xl font-poppins font-black text-white tracking-tight">Orders Management</h1>
           <p className="text-slate-500 text-sm font-medium mt-0.5">Track, update and fulfill customer orders</p>
         </div>
+        <button
+          onClick={handleExportCSV}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1b263b] hover:bg-primary-600 text-white font-bold text-xs rounded-xl transition-all border border-white/[0.05] shadow-sm uppercase tracking-wider whitespace-nowrap"
+        >
+          <Download size={14} />
+          Export Sales CSV
+        </button>
       </div>
 
       {/* Format Categories Tabs */}
