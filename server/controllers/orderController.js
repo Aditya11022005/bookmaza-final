@@ -16,7 +16,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // @route   POST /api/orders
 const addOrderItems = async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod, itemsPrice, shippingPrice, totalPrice } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, itemsPrice, shippingPrice, totalPrice, gstPercentage, tax, discount } = req.body;
 
     if (orderItems && orderItems.length === 0) {
       return res.status(400).json({ message: 'No order items' });
@@ -30,6 +30,9 @@ const addOrderItems = async (req, res) => {
         paymentMethod: isFreeClaim ? 'Free Claim' : paymentMethod,
         itemsPrice,
         shippingPrice,
+        gstPercentage: gstPercentage || 0,
+        tax: tax || 0,
+        discount: discount || 0,
         totalPrice,
         status: isFreeClaim ? 'Processing' : (paymentMethod === 'COD' ? 'Processing' : 'Pending'),
         isPaid: isFreeClaim ? true : false,

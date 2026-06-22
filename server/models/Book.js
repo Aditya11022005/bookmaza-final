@@ -15,6 +15,9 @@ const bookSchema = new mongoose.Schema(
     title: { type: String, required: true },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     authorName: { type: String, required: true },
+    coAuthor: { type: String },
+    chiefEditor: { type: String },
+    editor: { type: String },
     description: { type: String, required: true },
     summaryEn: { type: String },
     summaryMr: { type: String },
@@ -23,6 +26,7 @@ const bookSchema = new mongoose.Schema(
     formats: {
       ebook: {
         isAvailable: { type: Boolean, default: false },
+        isFree: { type: Boolean, default: false },
         price: { type: Number, default: 0 },
         fileUrl: { type: String },
         pdfUrl: { type: String },
@@ -31,6 +35,7 @@ const bookSchema = new mongoose.Schema(
       },
       audiobook: {
         isAvailable: { type: Boolean, default: false },
+        isFree: { type: Boolean, default: false },
         price: { type: Number, default: 0 },
         fileUrl: { type: String },
         duration: { type: String },
@@ -57,6 +62,9 @@ const bookSchema = new mongoose.Schema(
     publisher: { type: String },
     publishYear: { type: Number },
     language: { type: String, default: 'Marathi' },
+    amazonLink: { type: String },
+    flipkartLink: { type: String },
+    pothiLink: { type: String },
     reviews: [reviewSchema],
     rating: { type: Number, default: 0 },
     numReviews: { type: Number, default: 0 },

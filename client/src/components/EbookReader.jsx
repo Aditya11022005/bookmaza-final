@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { AnimatePresence, motion } from 'framer-motion';
 import axios from '../api/axios';
+import { resolveMediaUrl } from '../utils/image';
 import useAuthStore from '../store/authStore';
 import { 
   Bookmark, 
@@ -21,10 +23,7 @@ import { toast } from 'sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const EbookReader = () => {
   const { user } = useAuthStore();
@@ -58,6 +57,8 @@ const EbookReader = () => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
+  const [bookMode, setBookMode] = useState(true);
+  const [direction, setDirection] = useState(1);
 
   // Layout / sync state
   const [loading, setLoading] = useState(true);
@@ -77,9 +78,9 @@ const EbookReader = () => {
         const eUrl = ebook.epubUrl || (ebook.fileUrl && ebook.fileUrl.endsWith('.epub') ? ebook.fileUrl : '');
         const dUrl = ebook.docxUrl || (ebook.fileUrl && (ebook.fileUrl.endsWith('.docx') || ebook.fileUrl.endsWith('.doc')) ? ebook.fileUrl : '');
         
-        setPdfUrl(pUrl);
-        setEpubUrl(eUrl);
-        setDocxUrl(dUrl);
+        setPdfUrl(resolveMediaUrl(pUrl));
+        setEpubUrl(resolveMediaUrl(eUrl));
+        setDocxUrl(resolveMediaUrl(dUrl));
 
         // Determine default active tab format
         if (pUrl) setSelectedFormat('pdf');
@@ -89,13 +90,13 @@ const EbookReader = () => {
           // If a fileUrl was uploaded without format separation, inspect its extension
           const urlStr = ebook.fileUrl.toLowerCase();
           if (urlStr.includes('.epub')) {
-            setEpubUrl(ebook.fileUrl);
+            setEpubUrl(resolveMediaUrl(ebook.fileUrl));
             setSelectedFormat('epub');
           } else if (urlStr.includes('.docx') || urlStr.includes('.doc')) {
-            setDocxUrl(ebook.fileUrl);
+            setDocxUrl(resolveMediaUrl(ebook.fileUrl));
             setSelectedFormat('docx');
           } else {
-            setPdfUrl(ebook.fileUrl);
+            setPdfUrl(resolveMediaUrl(ebook.fileUrl));
             setSelectedFormat('pdf');
           }
         }
@@ -136,8 +137,42 @@ const EbookReader = () => {
 
   const changePage = (offset) => {
     const newPage = pageNumber + offset;
-    setPageNumber(newPage);
-    saveProgress(newPage, numPages);
+    if (newPage >= 1 && (numPages === null || newPage <= numPages)) {
+      setDirection(offset);
+      setPageNumber(newPage);
+      saveProgress(newPage, numPages);
+    }
+  };
+
+  const flipVariants = {
+    initial: (dir) => ({
+      rotateY: dir > 0 ? 35 : -35,
+      transformOrigin: dir > 0 ? 'left center' : 'right center',
+      opacity: 0.8,
+      scale: 0.97,
+      z: -50
+    }),
+    animate: {
+      rotateY: 0,
+      opacity: 1,
+      scale: 1,
+      z: 0,
+      transition: {
+        duration: 0.4,
+        ease: 'easeOut'
+      }
+    },
+    exit: (dir) => ({
+      rotateY: dir > 0 ? -35 : 35,
+      transformOrigin: dir > 0 ? 'right center' : 'left center',
+      opacity: 0.8,
+      scale: 0.97,
+      z: -50,
+      transition: {
+        duration: 0.4,
+        ease: 'easeIn'
+      }
+    })
   };
 
   if (loading) return <div className="text-center py-20 text-xl font-medium animate-pulse text-slate-500 font-poppins">Loading Secure Reader & Syncing Progress...</div>;
@@ -165,6 +200,16 @@ const EbookReader = () => {
             {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />} 
             {darkMode ? 'Light Theme' : 'Dark Theme'} 
           </button>
+
+          {selectedFormat === 'pdf' && (
+            <button 
+              onClick={() => setBookMode(!bookMode)} 
+              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+            >
+              <Sparkles size={16} className={bookMode ? 'text-primary-450 animate-pulse' : 'text-slate-400'} />
+              {bookMode ? '📖 3D Book Mode' : '📄 Flat PDF Mode'}
+            </button>
+          )}
         </div>
 
         {/* Center Toolbar Part: Format Tabs Selector */}
@@ -254,15 +299,21 @@ const EbookReader = () => {
         {/* Render PDF Format */}
         {selectedFormat === 'pdf' && (
           <div 
-            className="shadow-2xl rounded-2xl overflow-hidden border border-slate-300/30 relative" 
+            className={`shadow-2xl overflow-hidden relative transition-all duration-500 ${
+              bookMode 
+                ? 'rounded-r-2xl border-y border-r border-slate-400/40 bg-white shadow-[4px_4px_0px_#94a3b8,8px_8px_0px_#cbd5e1,12px_12px_0px_#e2e8f0]' 
+                : 'rounded-2xl border border-slate-300/30'
+            }`}
             style={{ 
               filter: darkMode ? 'invert(0.9) hue-rotate(180deg) contrast(1.15)' : 'none', 
               backgroundColor: darkMode ? '#ffffff' : 'transparent',
+              perspective: bookMode ? 1500 : 'none',
+              transformStyle: bookMode ? 'preserve-3d' : 'flat',
             }}
             onContextMenu={e => e.preventDefault()}
           >
             {/* Dynamic Watermark Overlay to prevent piracy/screenshots */}
-            <div className="absolute inset-0 pointer-events-none select-none z-10 flex flex-wrap gap-x-16 gap-y-24 items-center justify-center p-12 overflow-hidden opacity-[0.06] dark:opacity-[0.03]">
+            <div className="absolute inset-0 pointer-events-none select-none z-30 flex flex-wrap gap-x-16 gap-y-24 items-center justify-center p-12 overflow-hidden opacity-[0.06] dark:opacity-[0.03]">
               {Array.from({ length: 16 }).map((_, i) => (
                 <div key={i} className="text-slate-800 text-sm font-black tracking-widest uppercase rotate-[-30deg] whitespace-nowrap">
                   {user?.name || 'Reader'} ({user?.email || 'Pustak Maza'})
@@ -270,17 +321,34 @@ const EbookReader = () => {
               ))}
             </div>
 
+            {/* Crease shadow to make it look like open book spine */}
+            {bookMode && (
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/25 via-black/5 to-transparent z-25 pointer-events-none" />
+            )}
+
             <Document
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={<div className="p-20 font-bold font-poppins animate-pulse text-slate-500">Decrypting & rendering PDF canvas...</div>}
             >
-              <Page 
-                pageNumber={pageNumber} 
-                scale={scale} 
-                renderTextLayer={false} 
-                renderAnnotationLayer={false} 
-              />
+              <AnimatePresence initial={false} mode="wait" custom={direction}>
+                <motion.div
+                  key={pageNumber}
+                  custom={direction}
+                  variants={bookMode ? flipVariants : {}}
+                  initial={bookMode ? "initial" : false}
+                  animate={bookMode ? "animate" : false}
+                  exit={bookMode ? "exit" : false}
+                  className="relative z-10"
+                >
+                  <Page 
+                    pageNumber={pageNumber} 
+                    scale={scale} 
+                    renderTextLayer={false} 
+                    renderAnnotationLayer={false} 
+                  />
+                </motion.div>
+              </AnimatePresence>
             </Document>
           </div>
         )}

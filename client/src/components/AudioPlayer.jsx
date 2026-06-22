@@ -16,6 +16,7 @@ import {
   Volume2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { resolveMediaUrl } from '../utils/image';
 
 const formatTime = (seconds) => {
   if (isNaN(seconds)) return '00:00';
@@ -56,11 +57,14 @@ const AudioPlayer = () => {
         setBook(bookData);
 
         // Populate chapters
-        const bookChapters = bookData.formats?.audiobook?.chapters || [];
+        const bookChapters = (bookData.formats?.audiobook?.chapters || []).map(ch => ({
+          ...ch,
+          fileUrl: resolveMediaUrl(ch.fileUrl)
+        }));
         if (bookChapters.length > 0) {
           setChapters(bookChapters);
         } else {
-          setChapters([{ title: 'Full Audiobook / Introduction', fileUrl: bookData.formats?.audiobook?.fileUrl || '' }]);
+          setChapters([{ title: 'Full Audiobook / Introduction', fileUrl: resolveMediaUrl(bookData.formats?.audiobook?.fileUrl || '') }]);
         }
 
         // Restore saved chapter index
@@ -92,7 +96,7 @@ const AudioPlayer = () => {
       const currentChapter = chapters[currentChapterIdx];
       if (currentChapter && currentChapter.fileUrl) {
         const wasPlaying = isPlaying;
-        audioRef.current.src = currentChapter.fileUrl;
+        audioRef.current.src = resolveMediaUrl(currentChapter.fileUrl);
         audioRef.current.load();
         audioRef.current.playbackRate = playbackRate;
         

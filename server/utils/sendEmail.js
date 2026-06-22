@@ -16,7 +16,7 @@ const sendEmail = async (options) => {
         body: JSON.stringify({
           sender: {
             name: 'Pustak Maza',
-            email: process.env.EMAIL_SENDER || 'contact@booksagapublications.com'
+            email: process.env.EMAIL_SENDER || process.env.EMAIL_USER || 'contact@booksagapublications.com'
           },
           to: [
             {
@@ -33,6 +33,9 @@ const sendEmail = async (options) => {
         console.log(`Email sent successfully via Brevo HTTP API. Message ID: ${resData.messageId}`);
         return;
       } else {
+        console.error('--- BREVO API FAILURE DETAILS ---');
+        console.error(JSON.stringify(resData, null, 2));
+        console.error('---------------------------------');
         console.warn('Brevo HTTP API failed, attempting SMTP fallback. Error:', resData.message || resData);
       }
     }

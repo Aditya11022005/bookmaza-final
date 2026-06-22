@@ -8,13 +8,10 @@ import BookSlider from '../components/home/BookSlider';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
-import { getOptimizedImageUrl } from '../utils/image';
+import { getOptimizedImageUrl, resolveMediaUrl } from '../utils/image';
 import { Document, Page, pdfjs } from 'react-pdf';
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const REVIEWS_MOCK = [
   { id: 1, name: "Arjun Desai", rating: 5, date: "October 12, 2024", verified: true, title: "A masterpiece of modern publication!", text: "This book completely changed my perspective. The bilingual pacing is incredible, the Marathi translation hits very profoundly. Pustak Maza definitely produced a premium hardcover. The spacing and typography is top notch.", images: ["https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&q=80&w=400"] },
@@ -79,6 +76,12 @@ const BookDetails = () => {
       const processedBook = {
         ...data,
         subtitle: data.subtitle || "A premium publication from Pustak Maza.",
+        coAuthor: data.coAuthor || '',
+        chiefEditor: data.chiefEditor || '',
+        editor: data.editor || '',
+        amazonLink: data.amazonLink || '',
+        flipkartLink: data.flipkartLink || '',
+        pothiLink: data.pothiLink || '',
         author: data.author ? {
           name: data.author.name || data.authorName || 'Unknown Author',
           bio: data.author.bio || 'Author biography not updated yet.',
@@ -91,12 +94,14 @@ const BookDetails = () => {
         formats: {
           ebook: {
             isAvailable: data.formats?.ebook?.isAvailable || false,
+            isFree: data.formats?.ebook?.isFree || false,
             price: data.formats?.ebook?.price || 0,
             pdfUrl: data.formats?.ebook?.fileUrl || data.formats?.ebook?.pdfUrl || '',
             discountPrice: data.discountPercentage > 0 ? Math.round(data.formats?.ebook?.price * (1 - data.discountPercentage / 100)) : undefined
           },
           audiobook: {
             isAvailable: data.formats?.audiobook?.isAvailable || false,
+            isFree: data.formats?.audiobook?.isFree || false,
             price: data.formats?.audiobook?.price || 0,
             audioUrl: data.formats?.audiobook?.fileUrl || data.formats?.audiobook?.audioUrl || '',
             duration: data.formats?.audiobook?.duration || '',
@@ -235,15 +240,17 @@ const BookDetails = () => {
     (typeof item === 'string' ? item : item._id) === book?._id
   );
   const isFormatPurchased = isAlreadyPurchased && (selectedFormat === 'ebook' || selectedFormat === 'audiobook');
-  const isFree = currentPrice === 0 && (selectedFormat === 'ebook' || selectedFormat === 'audiobook');
+  const isFree = (activeFormatData.isFree || currentPrice === 0) && (selectedFormat === 'ebook' || selectedFormat === 'audiobook');
+  const displayPrice = isFree ? 0 : currentPrice;
+  const hasLocalFormats = book.formats?.ebook?.isAvailable || book.formats?.audiobook?.isAvailable || book.formats?.hardcopy?.isAvailable;
 
   const handleAddToCart = () => {
-    addToCart({ book: book._id, title: book.title, image: book.images[0], format: selectedFormat, price: currentPrice, quantity: 1 });
+    addToCart({ book: book._id, title: book.title, image: book.images[0], format: selectedFormat, price: displayPrice, quantity: 1 });
     toast.success(`Added ${selectedFormat} to cart successfully!`);
   };
 
   const handleBuyNow = () => {
-    const buyNowObj = { book: book._id, title: book.title, image: book.images[0], format: selectedFormat, price: currentPrice, qty: 1 };
+    const buyNowObj = { book: book._id, title: book.title, image: book.images[0], format: selectedFormat, price: displayPrice, qty: 1 };
     sessionStorage.setItem('tempBuyNow', JSON.stringify(buyNowObj));
     navigate('/checkout', { state: { buyNowItem: buyNowObj } });
   };
@@ -541,15 +548,15 @@ const BookDetails = () => {
                        <CheckCircle2 size={16}/> {activeFormatData.stock > 0 ? "In Stock & Ready to Dispatch" : "Instant Digital Availability"}
                     </div>
                     <div className="flex items-end gap-4">
-                       {currentPrice === 0 ? (
-                         <span className="text-5xl font-black text-emerald-600 leading-none font-poppins">
-                           Free
-                         </span>
-                       ) : (
-                         <span className="text-5xl font-black text-[#1e293b] leading-none font-poppins relative">
-                           <span className="text-2xl absolute -left-4 top-1 text-gray-400">₹</span>{currentPrice}
-                         </span>
-                       )}
+                      {displayPrice === 0 ? (
+                        <span className="text-5xl font-black text-emerald-600 leading-none font-poppins">
+                          Free
+                        </span>
+                      ) : (
+                        <span className="text-5xl font-black text-[#1e293b] leading-none font-poppins relative">
+                          <span className="text-2xl absolute -left-4 top-1 text-gray-400">₹</span>{displayPrice}
+                        </span>
+                      )}
                     </div>
                   </div>
                   {/* Circular Core Actions */}
@@ -571,34 +578,81 @@ const BookDetails = () => {
                </div>
 
                <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                 {isFormatPurchased ? (
-                   <button 
-                     onClick={() => navigate(selectedFormat === 'ebook' ? `/read/${book._id}` : `/listen/${book._id}`)} 
-                     className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-emerald-700 shadow-[0_15px_30px_rgba(16,185,129,0.3)] transition-all transform hover:-translate-y-1"
-                   >
-                     <BookOpen size={22}/> {selectedFormat === 'ebook' ? 'Read Ebook Now' : 'Listen to Audiobook Now'}
-                   </button>
-                 ) : isFree ? (
-                   <button 
-                     onClick={handleFreeClaim} 
-                     className="w-full py-5 rounded-2xl bg-[#1e293b] text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-primary-600 shadow-[0_15px_30px_rgba(30,41,59,0.3)] transition-all transform hover:-translate-y-1"
-                   >
-                     <BookOpen size={22}/> Claim Free Book
-                   </button>
-                 ) : (
-                   <>
-                     <button onClick={handleBuyNow} className="flex-[2] py-5 rounded-2xl bg-primary-500 text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-primary-600 shadow-[0_15px_30px_rgba(106,13,173,0.3)] transition-all transform hover:-translate-y-1">
-                       Buy Now Securely
-                     </button>
-                     <button onClick={handleAddToCart} className="flex-1 py-5 rounded-2xl border-2 border-primary-100 bg-primary-50 text-primary-600 font-extrabold text-lg flex items-center justify-center gap-2 hover:bg-primary-100 hover:text-primary-700 transition-colors">
-                       <ShoppingCart size={22}/> Add to Cart
-                     </button>
-                   </>
-                 )}
-               </div>
-               <div className="text-center text-xs font-bold text-gray-400 tracking-wide uppercase flex items-center justify-center gap-2">
-                 <LockIcon/> 100% Encrypted Payment Gateway
-               </div>
+                  {!hasLocalFormats ? (
+                    <div className="w-full text-center py-5 px-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                      <p className="text-slate-500 font-bold text-sm">This book is not sold directly on Pustak Maza.</p>
+                      <p className="text-[#1e293b] font-black text-base mt-1">Please buy using the external purchase links below.</p>
+                    </div>
+                  ) : isFormatPurchased ? (
+                    <button 
+                      onClick={() => navigate(selectedFormat === 'ebook' ? `/read/${book._id}` : `/listen/${book._id}`)} 
+                      className="w-full py-5 rounded-2xl bg-emerald-600 text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-emerald-700 shadow-[0_15px_30px_rgba(16,185,129,0.3)] transition-all transform hover:-translate-y-1"
+                    >
+                      <BookOpen size={22}/> {selectedFormat === 'ebook' ? 'Read Ebook Now' : 'Listen to Audiobook Now'}
+                    </button>
+                  ) : isFree ? (
+                    <button 
+                      onClick={handleFreeClaim} 
+                      className="w-full py-5 rounded-2xl bg-[#1e293b] text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-primary-600 shadow-[0_15px_30px_rgba(30,41,59,0.3)] transition-all transform hover:-translate-y-1"
+                    >
+                      <BookOpen size={22}/> Claim Free Book
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={handleBuyNow} className="flex-[2] py-5 rounded-2xl bg-primary-500 text-white font-black text-xl flex items-center justify-center gap-3 hover:bg-primary-600 shadow-[0_15px_30px_rgba(106,13,173,0.3)] transition-all transform hover:-translate-y-1">
+                        Buy Now Securely
+                      </button>
+                      <button onClick={handleAddToCart} className="flex-1 py-5 rounded-2xl border-2 border-primary-100 bg-primary-50 text-primary-600 font-extrabold text-lg flex items-center justify-center gap-2 hover:bg-primary-100 hover:text-primary-700 transition-colors">
+                        <ShoppingCart size={22}/> Add to Cart
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* External Purchase Links */}
+                {(book.amazonLink || book.flipkartLink || book.pothiLink) && (
+                  <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                    <span className="text-xs font-black text-gray-400 uppercase tracking-widest block text-center sm:text-left">Purchase From External Stores:</span>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {book.amazonLink && (
+                        <a 
+                          href={book.amazonLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 px-4 rounded-xl border border-[#FF9900] bg-[#FF9900]/5 text-[#FF9900] font-black text-sm flex items-center justify-center gap-2 hover:bg-[#FF9900] hover:text-white transition-all transform hover:-translate-y-0.5"
+                        >
+                          Amazon <ExternalLink size={14} />
+                        </a>
+                      )}
+                      {book.flipkartLink && (
+                        <a 
+                          href={book.flipkartLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 px-4 rounded-xl border border-[#2874F0] bg-[#2874F0]/5 text-[#2874F0] font-black text-sm flex items-center justify-center gap-2 hover:bg-[#2874F0] hover:text-white transition-all transform hover:-translate-y-0.5"
+                        >
+                          Flipkart <ExternalLink size={14} />
+                        </a>
+                      )}
+                      {book.pothiLink && (
+                        <a 
+                          href={book.pothiLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex-1 py-3 px-4 rounded-xl border border-primary-500 bg-primary-500/5 text-primary-600 font-black text-sm flex items-center justify-center gap-2 hover:bg-primary-500 hover:text-white transition-all transform hover:-translate-y-0.5"
+                        >
+                          Pothi <ExternalLink size={14} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {hasLocalFormats && (
+                  <div className="text-center text-xs font-bold text-gray-400 tracking-wide uppercase flex items-center justify-center gap-2">
+                    <LockIcon/> 100% Encrypted Payment Gateway
+                  </div>
+                )}
             </div>
 
             {/* Dynamic Re-active Format UI Block */}
@@ -628,7 +682,7 @@ const BookDetails = () => {
                  )}
                  {selectedFormat === 'audiobook' && (
                    <div className="bg-gradient-to-br from-primary-50 to-white rounded-3xl p-8 border border-primary-100 shadow-sm relative overflow-hidden">
-                      <audio ref={audioRef} src={book.formats.audiobook?.audioUrl} />
+                      <audio ref={audioRef} src={resolveMediaUrl(book.formats.audiobook?.audioUrl)} />
                       <div className="absolute -bottom-10 -right-10 text-primary-100/50"><Headphones size={150}/></div>
                       <div className="relative z-10 flex items-center justify-between mb-8">
                          <div className="flex items-center gap-5">
@@ -768,7 +822,10 @@ const BookDetails = () => {
                         { label: 'Published Date', val: book.publicationDate },
                         { label: 'Bilingual Format', val: book.language },
                         { label: 'Pages Count', val: book.pages },
-                      ].map((row, i) => (
+                        book.coAuthor && { label: book.coAuthor.includes(',') ? 'Co-Authors' : 'Co-Author', val: book.coAuthor },
+                        book.chiefEditor && { label: 'Chief Editor', val: book.chiefEditor },
+                        book.editor && { label: 'Editor', val: book.editor },
+                      ].filter(Boolean).map((row, i) => (
                         <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                            <th className="py-5 text-[#64748b] font-bold text-sm tracking-widest uppercase">{row.label}</th>
                            <td className="py-5 text-[#1e293b] font-black text-right">{row.val}</td>
@@ -1161,7 +1218,7 @@ const BookDetails = () => {
             <div className="flex-1 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-auto relative border border-white/10 p-4 flex justify-center items-start">
                <div>
                  <Document
-                   file={book.formats.ebook?.pdfUrl}
+                   file={resolveMediaUrl(book.formats.ebook?.pdfUrl)}
                    onLoadSuccess={({ numPages }) => setPreviewNumPages(numPages)}
                    loading={<div className="p-20 font-bold text-slate-500 animate-pulse text-center">Loading Preview...</div>}
                  >

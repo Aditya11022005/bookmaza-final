@@ -21,6 +21,7 @@ import cmsRoutes from './routes/cmsRoutes.js';
 import communityRoutes from './routes/communityRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import newsletterRoutes from './routes/newsletterRoutes.js';
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use('/api/cms', cmsRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/newsletter', newsletterRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

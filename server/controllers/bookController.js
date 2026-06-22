@@ -77,7 +77,13 @@ const createBook = async (req, res) => {
       language,
       authorName,
       summaryEn,
-      summaryMr
+      summaryMr,
+      coAuthor,
+      chiefEditor,
+      editor,
+      amazonLink,
+      flipkartLink,
+      pothiLink
     } = req.body;
     
     const parsedSummaryEn = summaryEn || description || '';
@@ -90,6 +96,9 @@ const createBook = async (req, res) => {
       title,
       author: req.user._id,
       authorName: authorName || req.user.name,
+      coAuthor,
+      chiefEditor,
+      editor,
       description,
       summaryEn: parsedSummaryEn,
       summaryMr: parsedSummaryMr,
@@ -104,6 +113,9 @@ const createBook = async (req, res) => {
       publisher,
       publishYear: Number(publishYear) || undefined,
       language: language || 'Marathi',
+      amazonLink,
+      flipkartLink,
+      pothiLink
     });
 
     const createdBook = await book.save();
@@ -172,7 +184,13 @@ const updateBook = async (req, res) => {
       language,
       authorName,
       summaryEn,
-      summaryMr
+      summaryMr,
+      coAuthor,
+      chiefEditor,
+      editor,
+      amazonLink,
+      flipkartLink,
+      pothiLink
     } = req.body;
 
     const book = await Book.findById(req.params.id);
@@ -196,6 +214,12 @@ const updateBook = async (req, res) => {
       book.publishYear = publishYear !== undefined ? Number(publishYear) : book.publishYear;
       book.language = language || book.language;
       book.authorName = authorName || book.authorName;
+      book.coAuthor = coAuthor !== undefined ? coAuthor : book.coAuthor;
+      book.chiefEditor = chiefEditor !== undefined ? chiefEditor : book.chiefEditor;
+      book.editor = editor !== undefined ? editor : book.editor;
+      book.amazonLink = amazonLink !== undefined ? amazonLink : book.amazonLink;
+      book.flipkartLink = flipkartLink !== undefined ? flipkartLink : book.flipkartLink;
+      book.pothiLink = pothiLink !== undefined ? pothiLink : book.pothiLink;
 
       // Update summaries
       const nextSummaryEn = summaryEn || (description ? description : book.summaryEn);
@@ -280,4 +304,34 @@ const createBookReview = async (req, res) => {
   }
 };
 
-export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview };
+// @desc    Delete book review
+// @route   DELETE /api/books/:id/reviews/:reviewId
+// @access  Private/Admin
+const deleteBookReview = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+
+    const reviewId = req.params.reviewId;
+    const initialLength = book.reviews.length;
+    book.reviews = book.reviews.filter(r => r._id.toString() !== reviewId);
+
+    if (book.reviews.length === initialLength) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    book.numReviews = book.reviews.length;
+    book.rating = book.reviews.length > 0 
+      ? book.reviews.reduce((acc, item) => item.rating + acc, 0) / book.reviews.length 
+      : 0;
+
+    await book.save();
+    res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview, deleteBookReview };

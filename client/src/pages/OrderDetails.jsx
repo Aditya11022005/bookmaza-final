@@ -72,12 +72,18 @@ const OrderDetails = () => {
       pincode: shippingAddress.zipCode
    } : (order.shippingDetails || null);
 
-   const subtotalValue = order.itemsPrice ?? order.subtotal ?? order.totalAmount ?? order.total ?? 0;
-   const discountValue = order.discount ?? 0;
-   const shippingValue = order.shippingPrice ?? order.shipping ?? 0;
-   const gstPercentageValue = order.gstPercentage ?? 18;
-   const taxValue = order.tax ?? Math.round((subtotalValue - discountValue) * (gstPercentageValue / 100));
-   const totalValue = order.totalPrice ?? order.totalAmount ?? order.total ?? 0;
+    const subtotalValue = order.itemsPrice ?? order.subtotal ?? order.totalAmount ?? order.total ?? 0;
+    const discountValue = order.discount ?? 0;
+    const shippingValue = order.shippingPrice ?? order.shipping ?? 0;
+    const totalValue = order.totalPrice ?? order.totalAmount ?? order.total ?? 0;
+
+    const taxValue = order.tax !== undefined ? order.tax : (
+      Math.abs(totalValue - (subtotalValue - discountValue + shippingValue)) < 2 ? 0 : 
+      Math.round((subtotalValue - discountValue) * 0.18)
+    );
+    const gstPercentageValue = order.gstPercentage !== undefined ? order.gstPercentage : (
+      taxValue === 0 ? 0 : 18
+    );
    const displayDate = order.createdAt || order.date || new Date();
    const orderStatus = order.status || (order.isPaid ? (order.isDelivered ? 'Delivered' : 'Access Granted') : (order.paymentMethod === 'COD' ? 'Processing' : 'Pending'));
 

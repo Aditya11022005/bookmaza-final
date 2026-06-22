@@ -165,6 +165,9 @@ const Checkout = () => {
         paymentMethod,
         itemsPrice: subtotal,
         shippingPrice: shipping,
+        gstPercentage,
+        tax,
+        discount: discountAmount,
         totalPrice: total
       };
 

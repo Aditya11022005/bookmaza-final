@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, Heart, User, Search, BookOpen, Headphones, Package, ArrowRight, Star, ChevronRight } from 'lucide-react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useCartStore from '../store/cartStore';
@@ -13,6 +13,26 @@ const RootLayout = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [books, setBooks] = useState([]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [submittingNewsletter, setSubmittingNewsletter] = useState(false);
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    setSubmittingNewsletter(true);
+    try {
+      const { data } = await axios.post('/newsletter/subscribe', { email: newsletterEmail });
+      toast.success(data.message || 'Subscribed successfully!');
+      setNewsletterEmail('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Subscription failed');
+    } finally {
+      setSubmittingNewsletter(false);
+    }
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -481,10 +501,23 @@ const RootLayout = () => {
            <div>
              <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-base">Newsletter</h4>
              <p className="mb-4">Subscribe for special offers and new arrivals.</p>
-             <div className="flex bg-gray-800 rounded-xl overflow-hidden focus-within:ring-2 ring-primary-500">
-               <input type="email" placeholder="Email Address" className="px-5 py-4 w-full bg-transparent border-none outline-none text-white font-medium" />
-               <button className="bg-primary-600 text-white px-6 py-4 hover:bg-primary-500 font-bold transition">Join</button>
-             </div>
+             <form onSubmit={handleNewsletterSubmit} className="flex bg-gray-800 rounded-xl overflow-hidden focus-within:ring-2 ring-primary-500">
+               <input 
+                 type="email" 
+                 placeholder="Email Address" 
+                 value={newsletterEmail}
+                 onChange={(e) => setNewsletterEmail(e.target.value)}
+                 className="px-5 py-4 w-full bg-transparent border-none outline-none text-white font-medium" 
+                 disabled={submittingNewsletter}
+               />
+               <button 
+                 type="submit" 
+                 disabled={submittingNewsletter}
+                 className="bg-primary-600 text-white px-6 py-4 hover:bg-primary-500 font-bold transition disabled:opacity-50"
+               >
+                 {submittingNewsletter ? '...' : 'Join'}
+               </button>
+             </form>
            </div>
         </div>
         <div className="text-center mt-16 pt-8 border-t border-gray-800 tracking-wider font-semibold text-gray-500">

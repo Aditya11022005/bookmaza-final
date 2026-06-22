@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { storage } from '../utils/cloudinary.js';
+import { storage, cloudinary } from '../utils/cloudinary.js';
 import { uploadS3 } from '../utils/s3.js';
 import { protect, author } from '../middleware/authMiddleware.js';
 
@@ -73,46 +73,77 @@ router.post('/image', protect, (req, res) => {
   }
 });
 
+// Helper to handle local upload followed by Cloudinary upload if configured
+const handleLocalOrCloudinaryUpload = (req, res, localErr) => {
+  if (localErr) {
+    return res.status(400).json({ message: localErr.message });
+  }
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+
+  const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
+  if (isCloudinaryConfigured) {
+    const fileExtension = path.extname(req.file.originalname).toLowerCase();
+    let resourceType = 'raw';
+    if (['.mp3', '.wav', '.m4a', '.aac'].includes(fileExtension)) {
+      resourceType = 'video';
+    }
+
+    cloudinary.uploader.upload(req.file.path, {
+      folder: 'pustakmaza_protected',
+      resource_type: resourceType,
+    })
+    .then((result) => {
+      // Clean up local temp file
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (err) {
+        console.error('Failed to clean up temp file:', err);
+      }
+      return res.json({
+        message: 'Protected file uploaded successfully to Cloudinary',
+        url: result.secure_url,
+        key: result.secure_url,
+      });
+    })
+    .catch((uploadErr) => {
+      console.warn('Cloudinary upload failed, falling back to local serving:', uploadErr.message);
+      const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      return res.json({
+        message: 'Protected file uploaded locally (Cloudinary failed)',
+        url,
+        key: url,
+      });
+    });
+  } else {
+    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    return res.json({
+      message: 'Protected file uploaded locally',
+      url,
+      key: url,
+    });
+  }
+};
+
 // @desc    Upload protected file (PDF, MP3) to S3
 // @route   POST /api/upload/protected
 router.post('/protected', protect, author, (req, res) => {
   const isS3Configured = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'key';
 
   if (!isS3Configured) {
-    // Force local upload fallback
+    // Force local/Cloudinary upload fallback
     uploadLocal.single('file')(req, res, (err) => {
-      if (err) {
-        return res.status(400).json({ message: err.message });
-      }
-      if (req.file) {
-        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-        return res.json({
-          message: 'Protected file uploaded locally',
-          url,
-          key: url, // Treat local url as key
-        });
-      }
-      return res.status(400).json({ message: 'No file uploaded' });
+      handleLocalOrCloudinaryUpload(req, res, err);
     });
   } else {
     // Try S3
     uploadS3.single('file')(req, res, (err) => {
       if (err) {
-        console.warn('S3 upload failed, falling back to local storage:', err.message);
-        // Fallback to local upload
+        console.warn('S3 upload failed, falling back to local/Cloudinary storage:', err.message);
+        // Fallback to local/Cloudinary upload
         return uploadLocal.single('file')(req, res, (localErr) => {
-          if (localErr) {
-            return res.status(400).json({ message: localErr.message });
-          }
-          if (req.file) {
-            const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-            return res.json({
-              message: 'Protected file uploaded locally',
-              url,
-              key: url,
-            });
-          }
-          return res.status(400).json({ message: 'No file uploaded' });
+          handleLocalOrCloudinaryUpload(req, res, localErr);
         });
       }
       if (req.file) {

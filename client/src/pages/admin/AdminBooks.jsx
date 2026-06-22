@@ -29,10 +29,19 @@ const AdminBooks = () => {
   const [publishYear, setPublishYear] = useState('');
   const [language, setLanguage] = useState('Marathi');
   const [authorName, setAuthorName] = useState('');
+  
+  // Custom roles & external links
+  const [coAuthor, setCoAuthor] = useState('');
+  const [chiefEditor, setChiefEditor] = useState('');
+  const [editor, setEditor] = useState('');
+  const [amazonLink, setAmazonLink] = useState('');
+  const [flipkartLink, setFlipkartLink] = useState('');
+  const [pothiLink, setPothiLink] = useState('');
 
   // Formats state
   const [ebookAvailable, setEbookAvailable] = useState(false);
   const [ebookPrice, setEbookPrice] = useState(0);
+  const [ebookFree, setEbookFree] = useState(false);
   const [ebookFile, setEbookFile] = useState('');
   const [ebookPdf, setEbookPdf] = useState('');
   const [ebookEpub, setEbookEpub] = useState('');
@@ -40,6 +49,7 @@ const AdminBooks = () => {
 
   const [audiobookAvailable, setAudiobookAvailable] = useState(false);
   const [audiobookPrice, setAudiobookPrice] = useState(0);
+  const [audiobookFree, setAudiobookFree] = useState(false);
   const [audiobookFile, setAudiobookFile] = useState('');
   const [audiobookDuration, setAudiobookDuration] = useState('');
   const [chapters, setChapters] = useState([]);
@@ -91,12 +101,14 @@ const AdminBooks = () => {
     setIsPublished(true);
     setEbookAvailable(false);
     setEbookPrice(0);
+    setEbookFree(false);
     setEbookFile('');
     setEbookPdf('');
     setEbookEpub('');
     setEbookDocx('');
     setAudiobookAvailable(false);
     setAudiobookPrice(0);
+    setAudiobookFree(false);
     setAudiobookFile('');
     setAudiobookDuration('');
     setChapters([]);
@@ -112,6 +124,13 @@ const AdminBooks = () => {
     setPublishYear('');
     setLanguage('Marathi');
     setAuthorName('');
+    
+    setCoAuthor('');
+    setChiefEditor('');
+    setEditor('');
+    setAmazonLink('');
+    setFlipkartLink('');
+    setPothiLink('');
     
     setIsModalOpen(true);
   };
@@ -129,6 +148,7 @@ const AdminBooks = () => {
 
     setEbookAvailable(book.formats?.ebook?.isAvailable || false);
     setEbookPrice(book.formats?.ebook?.price || 0);
+    setEbookFree(book.formats?.ebook?.isFree || false);
     setEbookFile(book.formats?.ebook?.fileUrl || '');
     setEbookPdf(book.formats?.ebook?.pdfUrl || '');
     setEbookEpub(book.formats?.ebook?.epubUrl || '');
@@ -136,6 +156,7 @@ const AdminBooks = () => {
 
     setAudiobookAvailable(book.formats?.audiobook?.isAvailable || false);
     setAudiobookPrice(book.formats?.audiobook?.price || 0);
+    setAudiobookFree(book.formats?.audiobook?.isFree || false);
     setAudiobookFile(book.formats?.audiobook?.fileUrl || '');
     setAudiobookDuration(book.formats?.audiobook?.duration || '');
     setChapters(book.formats?.audiobook?.chapters || []);
@@ -152,6 +173,13 @@ const AdminBooks = () => {
     setPublishYear(book.publishYear || '');
     setLanguage(book.language || 'Marathi');
     setAuthorName(book.authorName || '');
+
+    setCoAuthor(book.coAuthor || '');
+    setChiefEditor(book.chiefEditor || '');
+    setEditor(book.editor || '');
+    setAmazonLink(book.amazonLink || '');
+    setFlipkartLink(book.flipkartLink || '');
+    setPothiLink(book.pothiLink || '');
 
     setIsModalOpen(true);
   };
@@ -208,10 +236,17 @@ const AdminBooks = () => {
       authorName,
       summaryEn,
       summaryMr,
+      coAuthor,
+      chiefEditor,
+      editor,
+      amazonLink,
+      flipkartLink,
+      pothiLink,
       formats: {
         ebook: {
           isAvailable: ebookAvailable,
-          price: Number(ebookPrice),
+          isFree: ebookFree,
+          price: ebookFree ? 0 : Number(ebookPrice),
           fileUrl: ebookFile || ebookPdf || ebookEpub || ebookDocx,
           pdfUrl: ebookPdf,
           epubUrl: ebookEpub,
@@ -219,7 +254,8 @@ const AdminBooks = () => {
         },
         audiobook: {
           isAvailable: audiobookAvailable,
-          price: Number(audiobookPrice),
+          isFree: audiobookFree,
+          price: audiobookFree ? 0 : Number(audiobookPrice),
           fileUrl: audiobookFile || (chapters.length > 0 ? chapters[0].fileUrl : ''),
           duration: audiobookDuration,
           chapters: chapters,
@@ -628,6 +664,40 @@ const AdminBooks = () => {
                         />
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Co-Author Name(s)</label>
+                        <input 
+                          type="text" 
+                          value={coAuthor}
+                          onChange={(e) => setCoAuthor(e.target.value)}
+                          placeholder="Co-Author(s) (comma separated)" 
+                          className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Chief Editor</label>
+                        <input 
+                          type="text" 
+                          value={chiefEditor}
+                          onChange={(e) => setChiefEditor(e.target.value)}
+                          placeholder="Chief Editor" 
+                          className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Editor</label>
+                        <input 
+                          type="text" 
+                          value={editor}
+                          onChange={(e) => setEditor(e.target.value)}
+                          placeholder="Editor" 
+                          className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Discount Percentage (%)</label>
@@ -650,6 +720,44 @@ const AdminBooks = () => {
                           placeholder="e.g. Marathi, English" 
                           className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
                         />
+                      </div>
+                    </div>
+
+                    {/* External Purchase Links */}
+                    <div className="bg-white/[0.02] border border-white/10 rounded-xl p-4 space-y-3">
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">External Store Purchase Links</h4>
+                      <p className="text-[10px] text-slate-500">Provide links if the book is not directly sold on this platform.</p>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Amazon Link</label>
+                          <input 
+                            type="text" 
+                            value={amazonLink}
+                            onChange={(e) => setAmazonLink(e.target.value)}
+                            placeholder="Amazon URL" 
+                            className="w-full bg-[#0f172a] border border-white/10 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-primary-500/50" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Flipkart Link</label>
+                          <input 
+                            type="text" 
+                            value={flipkartLink}
+                            onChange={(e) => setFlipkartLink(e.target.value)}
+                            placeholder="Flipkart URL" 
+                            className="w-full bg-[#0f172a] border border-white/10 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-primary-500/50" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pothi Link</label>
+                          <input 
+                            type="text" 
+                            value={pothiLink}
+                            onChange={(e) => setPothiLink(e.target.value)}
+                            placeholder="Pothi URL" 
+                            className="w-full bg-[#0f172a] border border-white/10 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-primary-500/50" 
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -708,17 +816,30 @@ const AdminBooks = () => {
                       </div>
                       {ebookAvailable && (
                         <div className="space-y-4 pt-2">
-                          <div className="w-1/2">
-                            <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">E-Book Price (₹)</label>
-                            <input 
-                              type="number" 
-                              min="0"
-                              value={ebookPrice}
-                              onChange={(e) => setEbookPrice(e.target.value)}
-                              placeholder="299" 
-                              className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2" 
-                            />
-                            <span className="text-[10px] text-emerald-400 font-medium mt-1 block">Set to 0 to make it a Free E-Book</span>
+                          <div className="flex gap-4 max-w-md">
+                            <div className="flex-1">
+                              <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">E-Book Price (₹)</label>
+                              <input 
+                                type="number" 
+                                min="0"
+                                disabled={ebookFree}
+                                value={ebookFree ? 0 : ebookPrice}
+                                onChange={(e) => setEbookPrice(e.target.value)}
+                                placeholder="299" 
+                                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50" 
+                              />
+                            </div>
+                            <div className="flex items-end pb-1.5">
+                              <label className="flex items-center gap-2 text-xs text-slate-300 font-bold uppercase tracking-wider cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={ebookFree}
+                                  onChange={(e) => setEbookFree(e.target.checked)}
+                                  className="w-4 h-4 rounded border-white/20 bg-white/5 accent-primary-500" 
+                                />
+                                Make Free E-Book
+                              </label>
+                            </div>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -811,17 +932,30 @@ const AdminBooks = () => {
                       {audiobookAvailable && (
                         <div className="space-y-4 pt-2">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Audio Price (₹)</label>
-                              <input 
-                                type="number" 
-                                min="0"
-                                value={audiobookPrice}
-                                onChange={(e) => setAudiobookPrice(e.target.value)}
-                                placeholder="399" 
-                                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2" 
-                              />
-                              <span className="text-[10px] text-emerald-400 font-medium mt-1 block">Set to 0 to make it a Free Audiobook</span>
+                            <div className="flex gap-2">
+                              <div className="flex-1">
+                                <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Audio Price (₹)</label>
+                                <input 
+                                  type="number" 
+                                  min="0"
+                                  disabled={audiobookFree}
+                                  value={audiobookFree ? 0 : audiobookPrice}
+                                  onChange={(e) => setAudiobookPrice(e.target.value)}
+                                  placeholder="399" 
+                                  className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2 disabled:opacity-50" 
+                                />
+                              </div>
+                              <div className="flex items-end pb-1.5">
+                                <label className="flex items-center gap-1.5 text-[10px] text-slate-300 font-bold uppercase tracking-wider cursor-pointer whitespace-nowrap">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={audiobookFree}
+                                    onChange={(e) => setAudiobookFree(e.target.checked)}
+                                    className="w-3.5 h-3.5 rounded border-white/20 bg-white/5 accent-primary-500" 
+                                  />
+                                  Make Free
+                                </label>
+                              </div>
                             </div>
                             <div>
                               <label className="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">Duration (e.g. 5h 20m)</label>
