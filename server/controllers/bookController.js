@@ -5,6 +5,7 @@ import Book from '../models/Book.js';
 import User from '../models/User.js';
 import sendEmail from '../utils/sendEmail.js';
 import { translateToMarathi } from '../utils/translator.js';
+import { cloudinary } from '../utils/cloudinary.js';
 
 // @desc    Fetch all books
 // @route   GET /api/books
@@ -386,8 +387,27 @@ const proxyPdf = async (req, res) => {
       }
     }
 
+    let targetUrl = decodedUrl;
+    if (decodedUrl.includes('cloudinary.com') && decodedUrl.includes('/raw/upload/')) {
+      const match = decodedUrl.match(/\/raw\/upload\/(?:v\d+\/)?(.+)$/);
+      if (match && match[1]) {
+        const publicId = match[1];
+        try {
+          const signedUrl = cloudinary.url(publicId, {
+            resource_type: 'raw',
+            type: 'upload',
+            sign_url: true,
+            secure: true
+          });
+          targetUrl = signedUrl;
+        } catch (signErr) {
+          console.error('Failed to sign Cloudinary URL, using original:', signErr);
+        }
+      }
+    }
+
     // 2. Fetch the remote PDF (Cloudinary, S3, etc.)
-    const response = await fetch(decodedUrl);
+    const response = await fetch(targetUrl);
     if (!response.ok) {
       return res.status(response.status).json({ message: `Failed to fetch PDF: ${response.statusText}` });
     }

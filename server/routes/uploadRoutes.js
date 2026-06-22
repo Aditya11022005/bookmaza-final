@@ -32,6 +32,8 @@ const uploadToCloudinaryHelper = async (filePath, originalName) => {
   let resourceType = 'raw';
   if (['.mp3', '.wav', '.m4a', '.aac'].includes(fileExtension)) {
     resourceType = 'video';
+  } else if (fileExtension === '.pdf') {
+    resourceType = 'image';
   }
   const result = await cloudinary.uploader.upload(filePath, {
     folder: 'pustakmaza_protected',
