@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import axios from '../api/axios';
 import useAdminAuthStore from '../store/adminAuthStore';
 import {
   LayoutDashboard, BookOpen, Users, ShoppingBag, UserCog,
@@ -115,6 +117,73 @@ const AdminLayout = () => {
   // Light Mode Toggle State
   const [isLightMode, setIsLightMode] = useState(false);
 
+  // Search Command Palette State
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchData, setSearchData] = useState({ books: [], orders: [], users: [] });
+  const [loadingSearch, setLoadingSearch] = useState(false);
+
+  const allActions = [
+    { name: 'Go to Dashboard', path: '/admin/dashboard', desc: 'Overview and platform sales reports' },
+    { name: 'Books Catalog', path: '/admin/dashboard/books', desc: 'Upload and edit ebooks, audiobooks or physical books' },
+    { name: 'Categories Management', path: '/admin/dashboard/categories', desc: 'Configure platform book genres and categories' },
+    { name: 'Authors Approvals', path: '/admin/dashboard/authors', desc: 'Verify and manage author profiles and royalty splits' },
+    { name: 'Manage Orders', path: '/admin/dashboard/orders', desc: 'Track physical and digital customer orders' },
+    { name: 'System Settings', path: '/admin/dashboard/settings', desc: 'Configure GST, shipping costs, and Razorpay API' },
+    { name: 'Banners & Carousel', path: '/admin/dashboard/banners', desc: 'Manage home screen promo banner slides' },
+    { name: 'Coupons & Promos', path: '/admin/dashboard/coupons', desc: 'Create and distribute discount promo codes' }
+  ];
+
+  const openSearch = async () => {
+    setSearchOpen(true);
+    setSearchQuery('');
+    try {
+      setLoadingSearch(true);
+      const [booksRes, ordersRes, usersRes] = await Promise.all([
+        axios.get('/books?all=true'),
+        axios.get('/orders'),
+        axios.get('/users')
+      ]);
+      setSearchData({
+        books: booksRes.data || [],
+        orders: ordersRes.data || [],
+        users: usersRes.data || []
+      });
+    } catch (err) {
+      console.error('Search data fetch failed:', err);
+    } finally {
+      setLoadingSearch(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (searchOpen) {
+          setSearchOpen(false);
+        } else {
+          openSearch();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchOpen]);
+
+  const filteredBooks = searchQuery
+    ? searchData.books.filter(b => b.title?.toLowerCase().includes(searchQuery.toLowerCase()) || b.authorName?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+  const filteredOrders = searchQuery
+    ? searchData.orders.filter(o => o._id?.toLowerCase().includes(searchQuery.toLowerCase()) || o.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+  const filteredUsers = searchQuery
+    ? searchData.users.filter(u => u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || u.email?.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
+  const filteredActions = searchQuery
+    ? allActions.filter(a => a.name.toLowerCase().includes(searchQuery.toLowerCase()) || a.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+    : allActions;
+
   const currentTitle = PAGE_TITLES[location.pathname] || 'Admin';
   const initials = admin?.name
     ?.split(' ')
@@ -128,7 +197,7 @@ const AdminLayout = () => {
     navigate('/admin/login', { replace: true });
   };
 
-  const SIDEBAR_W = collapsed ? 'w-[72px]' : 'w-64';
+  const SIDEBAR_W = collapsed ? 'w-64 lg:w-[72px]' : 'w-64';
 
   return (
     <div className={`flex h-screen bg-[#0f172a] overflow-hidden font-inter ${isLightMode ? 'admin-light-mode' : ''}`}>
@@ -270,12 +339,23 @@ const AdminLayout = () => {
           {/* Spacer */}
           <div className="flex-1" />
 
-          {/* Search (decorative for now) */}
-          <div className="hidden md:flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2 text-slate-500 hover:bg-white/[0.08] transition-all cursor-pointer group">
+          {/* Search (functional) */}
+          <div 
+            onClick={openSearch}
+            className="hidden md:flex items-center gap-2 bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2 text-slate-500 hover:bg-white/[0.08] transition-all cursor-pointer group"
+          >
             <Search size={16} className="group-hover:text-slate-300 transition-colors" />
             <span className="text-sm font-medium">Search…</span>
             <kbd className="ml-2 text-[10px] font-bold bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-slate-600">⌘K</kbd>
           </div>
+
+          {/* Mobile Search Icon Button */}
+          <button 
+            onClick={openSearch}
+            className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all"
+          >
+            <Search size={17} />
+          </button>
 
           {/* Theme Toggle */}
           <button 
@@ -312,6 +392,203 @@ const AdminLayout = () => {
         </main>
 
       </div>
+
+      {/* ─── Search Command Palette ────────────────────────────── */}
+      <AnimatePresence>
+        {searchOpen && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[10vh] px-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSearchOpen(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-sm"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-xl bg-[#0d1526]/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh] z-10"
+            >
+              {/* Search Bar Input */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.08] shrink-0">
+                <Search size={20} className="text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search books, orders, authors, settings..."
+                  className="flex-grow bg-transparent text-white placeholder-slate-500 text-sm focus:outline-none"
+                />
+                <button
+                  onClick={() => setSearchOpen(false)}
+                  className="text-slate-500 hover:text-white transition-colors text-xs font-bold bg-white/5 px-2 py-1 rounded"
+                >
+                  ESC
+                </button>
+              </div>
+
+              {/* Results Area */}
+              <div className="flex-grow overflow-y-auto p-4 space-y-4 min-h-[200px]">
+                {loadingSearch ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-500">
+                    <div className="w-6 h-6 rounded-full border-2 border-primary-500/20 border-t-primary-500 animate-spin" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Syncing dashboard records...</span>
+                  </div>
+                ) : (
+                  <>
+                    {/* If no search query, show default instructions & quick actions */}
+                    {!searchQuery && (
+                      <div className="space-y-4">
+                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">
+                          Quick Navigation
+                        </div>
+                        <div className="grid grid-cols-1 gap-1">
+                          {allActions.map((action) => (
+                            <NavLink
+                              key={action.name}
+                              to={action.path}
+                              onClick={() => setSearchOpen(false)}
+                              className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/[0.04] transition-all group"
+                            >
+                              <div>
+                                <span className="text-white text-xs font-bold block group-hover:text-primary-400 transition-colors">{action.name}</span>
+                                <span className="text-slate-500 text-[11px] font-medium">{action.desc}</span>
+                              </div>
+                              <ChevronRight size={14} className="text-slate-600 group-hover:translate-x-0.5 transition-transform" />
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Search Results */}
+                    {searchQuery && (
+                      <div className="space-y-4">
+                        {/* Books Results */}
+                        {filteredBooks.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-[10px] font-black text-primary-400 uppercase tracking-widest px-2">
+                              Books ({filteredBooks.length})
+                            </div>
+                            <div className="space-y-1">
+                              {filteredBooks.map((book) => (
+                                <NavLink
+                                  key={book._id}
+                                  to="/admin/dashboard/books"
+                                  onClick={() => setSearchOpen(false)}
+                                  className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/[0.04] transition-all"
+                                >
+                                  <img src={book.coverImage} className="w-8 h-11 object-cover rounded bg-white/5 border border-white/10 shrink-0" />
+                                  <div className="min-w-0">
+                                    <span className="text-white text-xs font-bold block truncate">{book.title}</span>
+                                    <span className="text-slate-500 text-[10px] block truncate">By {book.authorName}</span>
+                                  </div>
+                                </NavLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Orders Results */}
+                        {filteredOrders.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-[10px] font-black text-amber-400 uppercase tracking-widest px-2">
+                              Orders ({filteredOrders.length})
+                            </div>
+                            <div className="space-y-1">
+                              {filteredOrders.map((order) => (
+                                <NavLink
+                                  key={order._id}
+                                  to="/admin/dashboard/orders"
+                                  onClick={() => setSearchOpen(false)}
+                                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/[0.04] transition-all group"
+                                >
+                                  <div className="min-w-0">
+                                    <span className="text-white text-xs font-bold block font-mono">
+                                      #{order._id.substring(order._id.length - 8).toUpperCase()}
+                                    </span>
+                                    <span className="text-slate-500 text-[10px] block truncate">
+                                      Customer: {order.user?.name || 'Guest'} ({order.user?.email || 'N/A'})
+                                    </span>
+                                  </div>
+                                  <span className="text-white text-xs font-bold shrink-0">₹{order.totalPrice}</span>
+                                </NavLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Users / Authors Results */}
+                        {filteredUsers.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-2">
+                              Users & Authors ({filteredUsers.length})
+                            </div>
+                            <div className="space-y-1">
+                              {filteredUsers.map((user) => (
+                                <NavLink
+                                  key={user._id}
+                                  to={user.role === 'author' ? '/admin/dashboard/authors' : '/admin/dashboard/users'}
+                                  onClick={() => setSearchOpen(false)}
+                                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/[0.04] transition-all"
+                                >
+                                  <div>
+                                    <span className="text-white text-xs font-bold block">{user.name}</span>
+                                    <span className="text-slate-500 text-[10px] block">{user.email}</span>
+                                  </div>
+                                  <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/10">
+                                    {user.role}
+                                  </span>
+                                </NavLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Actions Results */}
+                        {filteredActions.length > 0 && (
+                          <div className="space-y-2">
+                            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest px-2">
+                              System Actions
+                            </div>
+                            <div className="space-y-1">
+                              {filteredActions.map((action) => (
+                                <NavLink
+                                  key={action.name}
+                                  to={action.path}
+                                  onClick={() => setSearchOpen(false)}
+                                  className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/[0.04] transition-all group"
+                                >
+                                  <div>
+                                    <span className="text-white text-xs font-bold block group-hover:text-primary-400 transition-colors">{action.name}</span>
+                                    <span className="text-slate-500 text-[11px] font-medium">{action.desc}</span>
+                                  </div>
+                                  <ChevronRight size={14} className="text-slate-600 group-hover:translate-x-0.5 transition-transform" />
+                                </NavLink>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* If completely empty search */}
+                        {filteredBooks.length === 0 && filteredOrders.length === 0 && filteredUsers.length === 0 && filteredActions.length === 0 && (
+                          <div className="text-center py-12 text-slate-500 border border-dashed border-white/10 rounded-2xl">
+                            No records found matching "{searchQuery}".
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
