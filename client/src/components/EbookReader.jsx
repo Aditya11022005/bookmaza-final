@@ -60,13 +60,35 @@ const EbookReader = () => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
-  const [bookMode, setBookMode] = useState(true);
+  const [bookMode, setBookMode] = useState(window.innerWidth > 768);
   const [direction, setDirection] = useState(1);
+  const [containerWidth, setContainerWidth] = useState(800);
 
   // Layout / sync state
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [savingSync, setSavingSync] = useState(false);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const el = document.getElementById('pdf-container');
+      if (el) {
+        const width = el.clientWidth;
+        setContainerWidth(width > 0 ? width : Math.min(window.innerWidth - 32, 800));
+      } else {
+        setContainerWidth(Math.min(window.innerWidth - 32, 800));
+      }
+    };
+    
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    const timer = setTimeout(updateWidth, 150);
+    
+    return () => {
+      window.removeEventListener('resize', updateWidth);
+      clearTimeout(timer);
+    };
+  }, [selectedFormat, loading]);
 
   useEffect(() => {
     const fetchBookAndProgress = async () => {
@@ -188,12 +210,12 @@ const EbookReader = () => {
       <div className={`p-4 rounded-3xl shadow-xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all ${darkMode ? 'bg-[#0d1526]/90 text-slate-200 border-white/10' : 'bg-white text-slate-800 border-slate-200'}`}>
         
         {/* Left Toolbar Part: Return & DarkMode */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
           <button 
             onClick={() => navigate('/library')} 
             className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
           >
-            <ChevronLeft size={16} /> Library
+            <ChevronLeft size={16} /> <span className="hidden sm:inline">Library</span><span className="sm:hidden">Lib</span>
           </button>
           
           <button 
@@ -201,7 +223,8 @@ const EbookReader = () => {
             className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
           >
             {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />} 
-            {darkMode ? 'Light Theme' : 'Dark Theme'} 
+            <span className="hidden sm:inline">{darkMode ? 'Light Theme' : 'Dark Theme'}</span>
+            <span className="sm:hidden">{darkMode ? 'Light' : 'Dark'}</span>
           </button>
 
           {selectedFormat === 'pdf' && (
@@ -210,7 +233,8 @@ const EbookReader = () => {
               className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
             >
               <Sparkles size={16} className={bookMode ? 'text-primary-450 animate-pulse' : 'text-slate-400'} />
-              {bookMode ? '📖 3D Book Mode' : '📄 Flat PDF Mode'}
+              <span className="hidden sm:inline">{bookMode ? '📖 3D Book Mode' : '📄 Flat PDF Mode'}</span>
+              <span className="sm:hidden">{bookMode ? '📖 3D' : '📄 Flat'}</span>
             </button>
           )}
         </div>
@@ -297,7 +321,7 @@ const EbookReader = () => {
       )}
 
       {/* Main Content Area */}
-      <div className="w-full max-w-5xl mt-4 flex justify-center">
+      <div id="pdf-container" className="w-full max-w-5xl mt-4 flex justify-center">
         
         {/* Render PDF Format */}
         {selectedFormat === 'pdf' && (
@@ -346,6 +370,7 @@ const EbookReader = () => {
                 >
                   <Page 
                     pageNumber={pageNumber} 
+                    width={containerWidth}
                     scale={scale} 
                     renderTextLayer={false} 
                     renderAnnotationLayer={false} 
