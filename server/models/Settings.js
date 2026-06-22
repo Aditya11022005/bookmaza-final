@@ -15,7 +15,9 @@ const settingsSchema = new mongoose.Schema(
     contactAddress: { type: String, default: 'Pustak Maza HQ, Pune, Maharashtra, India' },
     contactHours: { type: String, default: 'Mon - Sat: 9:00 AM - 6:00 PM' },
     defaultRoyaltyPercentage: { type: Number, default: 25 },
-    autoApproveAuthors: { type: Boolean, default: false }
+    autoApproveAuthors: { type: Boolean, default: false },
+    razorpayKeyId: { type: String, default: '' },
+    razorpayKeySecret: { type: String, default: '' }
   },
   { timestamps: true }
 );

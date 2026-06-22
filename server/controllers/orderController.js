@@ -8,6 +8,7 @@ import sendEmail from '../utils/sendEmail.js';
 import { generatePresignedUrl } from '../utils/s3.js';
 import crypto from 'crypto';
 import { createShiprocketOrder } from '../utils/shiprocket.js';
+import Settings from '../models/Settings.js';
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -449,9 +450,10 @@ const createRazorpayOrder = async (req, res) => {
   try {
     const { amount } = req.body; // in INR (not paise)
     
-    // We can use a simple mock order if keys are not configured or request fails
-    const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_mockkey123';
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    // Retrieve dynamic keys from database settings
+    const settings = await Settings.findOne({});
+    const keyId = settings?.razorpayKeyId || process.env.RAZORPAY_KEY_ID || 'rzp_test_mockkey123';
+    const keySecret = settings?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
 
     let razorpayOrderId = `rzp_order_${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
@@ -505,7 +507,8 @@ const verifyRazorpayPayment = async (req, res) => {
       razorpaySignature 
     } = req.body;
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    const settings = await Settings.findOne({});
+    const keySecret = settings?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
 
     // Signature verification logic
     if (keySecret) {

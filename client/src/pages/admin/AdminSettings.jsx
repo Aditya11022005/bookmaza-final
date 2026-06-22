@@ -21,7 +21,9 @@ const AdminSettings = () => {
     contactAddress: '',
     contactHours: '',
     defaultRoyaltyPercentage: 25,
-    autoApproveAuthors: false
+    autoApproveAuthors: false,
+    razorpayKeyId: '',
+    razorpayKeySecret: ''
   });
 
   const [hasConnection, setHasConnection] = useState(false);
@@ -105,6 +107,8 @@ const AdminSettings = () => {
           contactHours: data.contactHours || '',
           defaultRoyaltyPercentage: data.defaultRoyaltyPercentage ?? 25,
           autoApproveAuthors: data.autoApproveAuthors ?? false,
+          razorpayKeyId: data.razorpayKeyId || '',
+          razorpayKeySecret: data.razorpayKeySecret ? '********' : ''
         });
         setHasConnection(!!(data.shiprocketEmail && data.shiprocketPassword));
       }
@@ -137,6 +141,9 @@ const AdminSettings = () => {
       const payload = { ...formData };
       if (payload.shiprocketPassword === '********') {
         delete payload.shiprocketPassword;
+      }
+      if (payload.razorpayKeySecret === '********') {
+        delete payload.razorpayKeySecret;
       }
 
       await axios.put('/settings', payload);
@@ -432,11 +439,25 @@ const AdminSettings = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Razorpay Key ID</label>
-                    <input type="text" defaultValue="rzp_live_xxxxxxxxxxxxxx" className="w-full bg-[#0f172a] border border-white/[0.06] text-slate-400 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" />
+                    <input 
+                      type="text" 
+                      name="razorpayKeyId"
+                      value={formData.razorpayKeyId || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. rzp_live_xxxxxxxxxxxxxx"
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
                   </div>
                   <div>
                     <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Razorpay Key Secret</label>
-                    <input type="password" defaultValue="************************" className="w-full bg-[#0f172a] border border-white/[0.06] text-slate-400 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" />
+                    <input 
+                      type="password" 
+                      name="razorpayKeySecret"
+                      value={formData.razorpayKeySecret || ''}
+                      onChange={handleChange}
+                      placeholder="Enter Razorpay Key Secret..."
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
                   </div>
                 </div>
               </div>

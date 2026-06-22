@@ -14,7 +14,16 @@ export const getSettings = async (req, res) => {
         autoApproveAuthors: false
       });
     }
-    res.json(settings);
+    
+    const settingsObj = settings.toObject();
+    if (settingsObj.shiprocketPassword) {
+      settingsObj.shiprocketPassword = '********';
+    }
+    if (settingsObj.razorpayKeySecret) {
+      settingsObj.razorpayKeySecret = '********';
+    }
+    
+    res.json(settingsObj);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -37,7 +46,9 @@ export const updateSettings = async (req, res) => {
       contactAddress,
       contactHours,
       defaultRoyaltyPercentage,
-      autoApproveAuthors
+      autoApproveAuthors,
+      razorpayKeyId,
+      razorpayKeySecret
     } = req.body;
     
     let settings = await Settings.findOne({});
@@ -63,9 +74,20 @@ export const updateSettings = async (req, res) => {
     if (contactHours !== undefined) settings.contactHours = contactHours;
     if (defaultRoyaltyPercentage !== undefined) settings.defaultRoyaltyPercentage = defaultRoyaltyPercentage;
     if (autoApproveAuthors !== undefined) settings.autoApproveAuthors = autoApproveAuthors;
+    if (razorpayKeyId !== undefined) settings.razorpayKeyId = razorpayKeyId;
+    if (razorpayKeySecret !== undefined) settings.razorpayKeySecret = razorpayKeySecret;
 
     const updatedSettings = await settings.save();
-    res.json(updatedSettings);
+    
+    const settingsObj = updatedSettings.toObject();
+    if (settingsObj.shiprocketPassword) {
+      settingsObj.shiprocketPassword = '********';
+    }
+    if (settingsObj.razorpayKeySecret) {
+      settingsObj.razorpayKeySecret = '********';
+    }
+    
+    res.json(settingsObj);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
