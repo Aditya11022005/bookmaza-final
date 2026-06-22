@@ -84,10 +84,11 @@ const OrderDetails = () => {
     const gstPercentageValue = order.gstPercentage !== undefined ? order.gstPercentage : (
       taxValue === 0 ? 0 : 18
     );
-   const displayDate = order.createdAt || order.date || new Date();
-   const orderStatus = order.status || (order.isPaid ? (order.isDelivered ? 'Delivered' : 'Access Granted') : (order.paymentMethod === 'COD' ? 'Processing' : 'Pending'));
+    const displayDate = order.createdAt || order.date || new Date();
+    const orderStatus = order.status || (order.isPaid ? (order.isDelivered ? 'Delivered' : 'Access Granted') : (order.paymentMethod === 'COD' ? 'Processing' : 'Pending'));
+    const hasPhysical = orderItemsList.some(item => ['hardcopy', 'Hardcopy'].includes(item.format));
 
-   // Downloadable / printable HTML Invoice
+    // Downloadable / printable HTML Invoice
    const handleDownloadInvoice = () => {
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
@@ -297,6 +298,88 @@ const OrderDetails = () => {
                </button>
             </div>
          </div>
+
+         {/* Shipment Tracking Timeline (Physical Orders Only) */}
+         {hasPhysical && (
+            <div className="mb-10 bg-white rounded-[2.5rem] border border-[#e2e8f0] p-6 sm:p-8 shadow-sm">
+               <h3 className="text-lg font-poppins font-black text-[#1e293b] mb-6 uppercase tracking-wide flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 border border-primary-100/50"><Truck size={16}/></span>
+                  Shipment Tracking Status
+               </h3>
+               
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 p-5 bg-[#f8fafc] rounded-2xl border border-gray-100">
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Courier Partner</p>
+                     <p className="font-bold text-[#1e293b]">{order.courierPartner || 'Shiprocket'}</p>
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">AWB / Tracking Number</p>
+                     <p className="font-mono text-sm font-black text-primary-600 select-all">{order.trackingNumber || 'Awaiting dispatch assignment'}</p>
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Last Updated Status</p>
+                     <p className="font-bold text-[#1e293b]">{orderStatus}</p>
+                  </div>
+               </div>
+
+               {/* Stepper Timeline */}
+               <div className="relative pl-6 sm:pl-8 border-l border-[#e2e8f0] ml-3 sm:ml-4 space-y-6">
+                  {order.trackingHistory && order.trackingHistory.length > 0 ? (
+                     [...order.trackingHistory].reverse().map((history, idx) => (
+                        <div key={idx} className="relative">
+                           {/* Pulse primary dot for latest milestone, standard dot for rest */}
+                           <div className={`absolute -left-[31px] sm:-left-[37px] top-1.5 w-4 h-4 rounded-full border-4 border-white ${
+                              idx === 0 ? 'bg-primary-500 animate-pulse ring-4 ring-primary-500/20' : 'bg-slate-300'
+                           }`} />
+                           
+                           <div>
+                              <h4 className="font-bold text-[14px] text-[#1e293b]">{history.description}</h4>
+                              <div className="flex gap-2 items-center text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">
+                                 <span>{history.status}</span>
+                                 <span>•</span>
+                                 <span>{new Date(history.timestamp).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                           </div>
+                        </div>
+                     ))
+                  ) : (
+                     /* Default stepper milestones if tracking history doesn't exist yet */
+                     <>
+                        <div className="relative">
+                           <div className={`absolute -left-[31px] sm:-left-[37px] top-1.5 w-4 h-4 rounded-full border-4 border-white ${
+                              orderStatus === 'Pending' ? 'bg-primary-500 animate-pulse ring-4 ring-primary-500/20' : 'bg-primary-500'
+                           }`} />
+                           <h4 className="font-bold text-sm text-[#1e293b]">Order Placed & Confirmed</h4>
+                           <p className="text-xs text-slate-500 mt-0.5">We have received your order details and payment validation.</p>
+                        </div>
+                        <div className="relative">
+                           <div className={`absolute -left-[31px] sm:-left-[37px] top-1.5 w-4 h-4 rounded-full border-4 border-white ${
+                              orderStatus === 'Processing' ? 'bg-primary-500 animate-pulse ring-4 ring-primary-500/20' : 
+                              ['Shipped', 'Delivered'].includes(orderStatus) ? 'bg-primary-500' : 'bg-slate-200'
+                           }`} />
+                           <h4 className="font-bold text-sm text-[#1e293b]">Order Processing & Packing</h4>
+                           <p className="text-xs text-slate-500 mt-0.5">The publisher is packing your book copy for shipping dispatch.</p>
+                        </div>
+                        <div className="relative">
+                           <div className={`absolute -left-[31px] sm:-left-[37px] top-1.5 w-4 h-4 rounded-full border-4 border-white ${
+                              orderStatus === 'Shipped' ? 'bg-primary-500 animate-pulse ring-4 ring-primary-500/20' : 
+                              orderStatus === 'Delivered' ? 'bg-primary-500' : 'bg-slate-200'
+                           }`} />
+                           <h4 className="font-bold text-sm text-[#1e293b]">Dispatched via Courier</h4>
+                           <p className="text-xs text-slate-500 mt-0.5">AWB generated. Shipment handed over to courier dispatch partner.</p>
+                        </div>
+                        <div className="relative">
+                           <div className={`absolute -left-[31px] sm:-left-[37px] top-1.5 w-4 h-4 rounded-full border-4 border-white ${
+                              orderStatus === 'Delivered' ? 'bg-primary-500 animate-pulse ring-4 ring-primary-500/20' : 'bg-slate-200'
+                           }`} />
+                           <h4 className="font-bold text-sm text-[#1e293b]">Package Delivered</h4>
+                           <p className="text-xs text-slate-500 mt-0.5">Shipment successfully delivered to target address destination.</p>
+                        </div>
+                     </>
+                  )}
+               </div>
+            </div>
+         )}
 
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
             

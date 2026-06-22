@@ -29,6 +29,8 @@ const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [courierPartner, setCourierPartner] = useState('Shiprocket');
+  const [historyDescription, setHistoryDescription] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'hardcopy' | 'ebook' | 'audiobook'
 
   const fetchOrders = async () => {
@@ -67,13 +69,15 @@ const AdminOrders = () => {
     }
   };
 
-  const handleUpdateStatus = async (orderId, nextStatus, trackNum = '') => {
+  const handleUpdateStatus = async (orderId, nextStatus, trackNum = '', courier = 'Shiprocket', desc = '') => {
     try {
       const { data } = await axios.put(`/orders/${orderId}/deliver`, { 
         status: nextStatus, 
-        trackingNumber: trackNum 
+        trackingNumber: trackNum,
+        courierPartner: courier,
+        historyDescription: desc
       });
-      toast.success(`Order status updated to ${nextStatus} successfully!`);
+      toast.success(desc ? 'Tracking log added successfully!' : `Order status updated to ${nextStatus} successfully!`);
       
       // Update local selectedOrder if it is currently open
       if (selectedOrder && selectedOrder._id === orderId) {
@@ -82,9 +86,12 @@ const AdminOrders = () => {
           status: nextStatus,
           isDelivered: nextStatus === 'Delivered',
           deliveredAt: nextStatus === 'Delivered' ? new Date().toISOString() : prev.deliveredAt,
-          trackingNumber: trackNum
+          trackingNumber: trackNum,
+          courierPartner: courier,
+          trackingHistory: data.trackingHistory || []
         }));
       }
+      setHistoryDescription('');
       fetchOrders();
     } catch (err) {
       console.error(err);
@@ -211,6 +218,8 @@ const AdminOrders = () => {
                             onClick={() => {
                               setSelectedOrder(order);
                               setTrackingNumber(order.trackingNumber || '');
+                              setCourierPartner(order.courierPartner || 'Shiprocket');
+                              setHistoryDescription('');
                             }}
                             className="inline-flex items-center justify-center p-2 bg-[#1b263b] hover:bg-primary-600 text-white rounded-lg transition-colors border border-white/[0.05]"
                             title="View Details"
@@ -223,6 +232,8 @@ const AdminOrders = () => {
                               onClick={() => {
                                 setSelectedOrder(order);
                                 setTrackingNumber(order.trackingNumber || '');
+                                setCourierPartner(order.courierPartner || 'Shiprocket');
+                                setHistoryDescription('');
                               }}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors border border-emerald-500 shadow-sm"
                             >
@@ -401,39 +412,141 @@ const AdminOrders = () => {
                     )}
 
                     {/* Status Management Action */}
-                    <div className="space-y-3">
-                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Update Order Status</p>
-                      <select
-                        value={selectedOrder.status}
-                        onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value, trackingNumber)}
-                        className="w-full bg-[#0d1526] border border-white/[0.08] text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
+                    {(() => {
+                      const hasPhysicalItems = selectedOrder.orderItems?.some(item => item.format === 'hardcopy');
+                      return (
+                        <>
+                          {/* Courier and Shipment Updates (Physical Only) */}
+                          {hasPhysicalItems ? (
+                            <div className="space-y-4 pt-4 border-t border-white/[0.06]">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Shipment Dispatch Configuration</p>
+                              
+                              {/* Courier Selector & Status */}
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="block text-[10px] text-slate-500 font-bold uppercase">Courier Partner</label>
+                                  <select
+                                    value={courierPartner}
+                                    onChange={(e) => setCourierPartner(e.target.value)}
+                                    className="w-full bg-[#0d1526] border border-white/[0.08] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
+                                  >
+                                    <option value="Shiprocket">Shiprocket</option>
+                                    <option value="Blue Dart">Blue Dart</option>
+                                    <option value="Self-Managed">Self-Managed (Manual)</option>
+                                  </select>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  <label className="block text-[10px] text-slate-500 font-bold uppercase">Main Order Status</label>
+                                  <select
+                                    value={selectedOrder.status}
+                                    onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value, trackingNumber, courierPartner)}
+                                    className="w-full bg-[#0d1526] border border-white/[0.08] text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
+                                  >
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                  </select>
+                                </div>
+                              </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-xs text-slate-400 font-bold uppercase tracking-wider">Tracking Number / AWB</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Enter tracking number/AWB..."
-                          value={trackingNumber}
-                          onChange={(e) => setTrackingNumber(e.target.value)}
-                          className="flex-grow bg-[#0d1526] border border-white/[0.08] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-primary-500/50"
-                        />
-                        <button
-                          onClick={() => handleUpdateStatus(selectedOrder._id, selectedOrder.status, trackingNumber)}
-                          className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs rounded-xl transition-all whitespace-nowrap"
-                        >
-                          Update AWB
-                        </button>
-                      </div>
-                    </div>
+                              {/* AWB input field */}
+                              <div className="space-y-2">
+                                <label className="block text-[10px] text-slate-500 font-bold uppercase">Tracking Number / AWB Code</label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Enter tracking number/AWB code..."
+                                    value={trackingNumber}
+                                    onChange={(e) => setTrackingNumber(e.target.value)}
+                                    className="flex-grow bg-[#0d1526] border border-white/[0.08] text-white text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-primary-500/50"
+                                  />
+                                  <button
+                                    onClick={() => handleUpdateStatus(selectedOrder._id, selectedOrder.status, trackingNumber, courierPartner)}
+                                    className="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white font-bold text-xs rounded-xl transition-all whitespace-nowrap"
+                                  >
+                                    Save AWB
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Self-Managed Manual log update */}
+                              {courierPartner === 'Self-Managed' && (
+                                <div className="p-3 bg-white/[0.02] border border-white/[0.04] rounded-xl space-y-2.5">
+                                  <p className="text-[10px] text-primary-400 font-bold uppercase tracking-wider">Manual Tracking Log Update</p>
+                                  <div className="space-y-1.5">
+                                    <input
+                                      type="text"
+                                      placeholder="Milestone description (e.g. Package arrived at Pune Hub)..."
+                                      value={historyDescription}
+                                      onChange={(e) => setHistoryDescription(e.target.value)}
+                                      className="w-full bg-[#0d1526] border border-white/[0.08] text-white text-xs rounded-xl px-3 py-2 focus:outline-none"
+                                    />
+                                    <button
+                                      onClick={() => {
+                                        if (!historyDescription.trim()) {
+                                          toast.error('Please enter a description for the tracking milestone.');
+                                          return;
+                                        }
+                                        handleUpdateStatus(selectedOrder._id, selectedOrder.status, trackingNumber, courierPartner, historyDescription);
+                                      }}
+                                      className="w-full py-1.5 bg-primary-600/30 hover:bg-primary-600/40 text-primary-300 font-bold text-xs rounded-lg transition-all border border-primary-500/20"
+                                    >
+                                      + Post Milestone Update
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Tracking History Log/Timeline view */}
+                              <div className="space-y-3">
+                                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Tracking Timeline</p>
+                                {selectedOrder.trackingHistory && selectedOrder.trackingHistory.length > 0 ? (
+                                  <div className="border-l border-white/[0.06] ml-2 pl-4 space-y-4">
+                                    {selectedOrder.trackingHistory.map((history, idx) => (
+                                      <div key={idx} className="relative">
+                                        <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-primary-500 border-2 border-[#0f172a] shadow" />
+                                        <div className="flex justify-between items-start gap-4">
+                                          <div>
+                                            <p className="text-xs font-bold text-slate-200">{history.description}</p>
+                                            <p className="text-[10px] text-slate-500 mt-0.5">Status: {history.status}</p>
+                                          </div>
+                                          <span className="text-[9px] text-slate-600 font-mono whitespace-nowrap">
+                                            {new Date(history.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-slate-500 italic py-2">
+                                    No tracking checkpoints recorded yet. Updates will appear here.
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            /* Non-Physical/Digital Orders updates */
+                            <div className="space-y-3 pt-4 border-t border-white/[0.06]">
+                              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Update Order Status</p>
+                              <select
+                                value={selectedOrder.status}
+                                onChange={(e) => handleUpdateStatus(selectedOrder._id, e.target.value)}
+                                className="w-full bg-[#0d1526] border border-white/[0.08] text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
                   </div>
 
                 </div>

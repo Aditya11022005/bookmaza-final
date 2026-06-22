@@ -38,6 +38,14 @@ const orderSchema = new mongoose.Schema(
     isDelivered: { type: Boolean, required: true, default: false }, // Delivery for physical only
     deliveredAt: { type: Date },
     trackingNumber: { type: String },
+    courierPartner: { type: String, default: 'Shiprocket' }, // 'Shiprocket', 'Blue Dart', 'Self-Managed'
+    trackingHistory: [
+      {
+        status: { type: String },
+        description: { type: String },
+        timestamp: { type: Date, default: Date.now }
+      }
+    ],
     status: { type: String, enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'], default: 'Pending' },
   },
   { timestamps: true }

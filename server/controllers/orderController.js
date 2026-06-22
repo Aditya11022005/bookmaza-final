@@ -397,6 +397,29 @@ const updateOrderToDelivered = async (req, res) => {
         order.trackingNumber = req.body.trackingNumber;
       }
 
+      if (req.body.courierPartner !== undefined) {
+        order.courierPartner = req.body.courierPartner;
+      }
+
+      // Add a record to tracking history
+      if (req.body.historyDescription) {
+        order.trackingHistory.push({
+          status: newStatus,
+          description: req.body.historyDescription,
+          timestamp: Date.now()
+        });
+      } else if (oldStatus !== newStatus || order.trackingHistory.length === 0) {
+        let desc = `Order status updated to ${newStatus}`;
+        if (newStatus === 'Shipped') {
+          desc = `Package shipped via ${order.courierPartner || 'Shiprocket'} (AWB: ${order.trackingNumber || 'N/A'})`;
+        }
+        order.trackingHistory.push({
+          status: newStatus,
+          description: desc,
+          timestamp: Date.now()
+        });
+      }
+
       const updatedOrder = await order.save();
 
       // Trigger status update email
