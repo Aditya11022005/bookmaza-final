@@ -29,6 +29,7 @@ const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'hardcopy' | 'ebook' | 'audiobook'
 
   const fetchOrders = async () => {
     try {
@@ -91,10 +92,16 @@ const AdminOrders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(o => 
-    (o._id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (o.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredOrders = orders.filter(o => {
+    const searchMatch = 
+      (o._id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (o.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!searchMatch) return false;
+
+    if (activeTab === 'all') return true;
+    return o.orderItems?.some(item => (item.format || '').toLowerCase() === activeTab);
+  });
 
   return (
     <div className="space-y-6">
@@ -103,6 +110,39 @@ const AdminOrders = () => {
           <h1 className="text-2xl font-poppins font-black text-white tracking-tight">Orders Management</h1>
           <p className="text-slate-500 text-sm font-medium mt-0.5">Track, update and fulfill customer orders</p>
         </div>
+      </div>
+
+      {/* Format Categories Tabs */}
+      <div className="flex flex-wrap gap-2 border-b border-white/[0.06] pb-1">
+        {[
+          { id: 'all', label: 'All Orders', count: orders.length },
+          { id: 'hardcopy', label: '📖 Hardcopy (Physical)', count: orders.filter(o => o.orderItems?.some(i => (i.format || '').toLowerCase() === 'hardcopy')).length },
+          { id: 'ebook', label: '💻 E-Book', count: orders.filter(o => o.orderItems?.some(i => (i.format || '').toLowerCase() === 'ebook')).length },
+          { id: 'audiobook', label: '🎧 Audiobook', count: orders.filter(o => o.orderItems?.some(i => (i.format || '').toLowerCase() === 'audiobook')).length },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2.5 rounded-t-xl text-xs font-bold uppercase tracking-wider transition-all relative ${
+              activeTab === tab.id
+                ? 'text-primary-400 bg-white/[0.04]'
+                : 'text-slate-500 hover:text-slate-300'
+            }`}
+          >
+            {tab.label}
+            <span className={`ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-black ${
+              activeTab === tab.id ? 'bg-primary-500/20 text-primary-300' : 'bg-slate-800 text-slate-500'
+            }`}>
+              {tab.count}
+            </span>
+            {activeTab === tab.id && (
+              <motion.div 
+                layoutId="activeOrderTabBorder"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" 
+              />
+            )}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
