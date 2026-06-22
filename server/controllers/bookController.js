@@ -374,6 +374,7 @@ const proxyPdf = async (req, res) => {
     }
 
     const decodedUrl = decodeURIComponent(url);
+    console.log('[PDF Proxy] Incoming proxy request for:', decodedUrl);
 
     // 1. Check if it's a local file inside public/uploads to serve it directly
     if (decodedUrl.includes('/uploads/')) {
@@ -381,11 +382,15 @@ const proxyPdf = async (req, res) => {
       const relativePath = decodedUrl.substring(pathIndex); // e.g. /uploads/filename.pdf
       const filePath = path.join(process.cwd(), 'public', relativePath);
       
+      console.log('[PDF Proxy] Local file path matched:', filePath);
       if (fs.existsSync(filePath)) {
+        console.log('[PDF Proxy] Local file exists. Serving directly.');
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'inline; filename="book.pdf"');
         return res.sendFile(filePath);
+      } else {
+        console.warn('[PDF Proxy] Local file does not exist on disk.');
       }
     }
 
@@ -402,15 +407,20 @@ const proxyPdf = async (req, res) => {
             secure: true
           });
           targetUrl = signedUrl;
+          console.log('[PDF Proxy] Signed Cloudinary raw URL generated:', targetUrl);
         } catch (signErr) {
           console.error('Failed to sign Cloudinary URL, using original:', signErr);
         }
       }
     }
 
+    console.log('[PDF Proxy] Fetching target URL:', targetUrl);
     // 2. Fetch the remote PDF (Cloudinary, S3, etc.)
     const response = await fetch(targetUrl);
+    console.log('[PDF Proxy] Fetch response status:', response.status, response.statusText);
+    
     if (!response.ok) {
+      console.error('[PDF Proxy] Remote fetch failed with status:', response.status);
       return res.status(response.status).json({ message: `Failed to fetch PDF: ${response.statusText}` });
     }
 
