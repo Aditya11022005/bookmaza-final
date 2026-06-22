@@ -395,19 +395,22 @@ const proxyPdf = async (req, res) => {
     }
 
     let targetUrl = decodedUrl;
-    if (decodedUrl.includes('cloudinary.com') && decodedUrl.includes('/raw/upload/')) {
-      const match = decodedUrl.match(/\/raw\/upload\/(?:v\d+\/)?(.+)$/);
-      if (match && match[1]) {
-        const publicId = match[1];
+    if (decodedUrl.includes('cloudinary.com')) {
+      const cldMatch = decodedUrl.match(/res\.cloudinary\.com\/[^/]+\/([^/]+)\/([^/]+)\/(?:v\d+\/)?(.+)$/);
+      if (cldMatch && cldMatch[1] && cldMatch[2] && cldMatch[3]) {
+        const resourceType = cldMatch[1];
+        const deliveryType = cldMatch[2];
+        let publicId = cldMatch[3];
+        publicId = publicId.split('?')[0].split('#')[0];
         try {
           const signedUrl = cloudinary.url(publicId, {
-            resource_type: 'raw',
-            type: 'upload',
+            resource_type: resourceType,
+            type: deliveryType,
             sign_url: true,
             secure: true
           });
           targetUrl = signedUrl;
-          console.log('[PDF Proxy] Signed Cloudinary raw URL generated:', targetUrl);
+          console.log('[PDF Proxy] Universal signed Cloudinary URL generated:', targetUrl);
         } catch (signErr) {
           console.error('Failed to sign Cloudinary URL, using original:', signErr);
         }
