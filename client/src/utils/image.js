@@ -59,7 +59,7 @@ export const resolveMediaUrl = (url) => {
     return url;
   }
   const apiUrl = import.meta.env.VITE_API_URL || '';
-  const backendBase = apiUrl ? apiUrl.replace(/\/api\/?$/, '') : 'http://localhost:5000';
+  const backendBase = apiUrl ? apiUrl.replace(/\/api\/?$/, '') : window.location.origin;
   const cleanPath = url.startsWith('/') ? url : `/${url}`;
   return `${backendBase}${cleanPath}`;
 };
@@ -76,8 +76,8 @@ export const getPdfProxyUrl = (pdfUrl) => {
   // First, resolve the media URL to absolute
   const resolvedUrl = resolveMediaUrl(pdfUrl);
   
-  // Get API URL (default to localhost if not set)
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  // Get API URL (default to relative /api if not set)
+  const apiUrl = import.meta.env.VITE_API_URL || '/api';
   
   // Return the backend proxy endpoint wrapping the resolved URL
   return `${apiUrl}/books/pdf-proxy?url=${encodeURIComponent(resolvedUrl)}`;
