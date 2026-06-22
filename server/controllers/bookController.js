@@ -23,9 +23,11 @@ const getBooks = async (req, res) => {
       filter.author = req.query.author;
     }
 
-    const books = await Book.find(filter)
-      .select('title subtitle authorName coverImage category formats rating numReviews price isPublished createdAt')
-      .populate('category', 'name slug');
+    let query = Book.find(filter);
+    if (req.query.all !== 'true') {
+      query = query.select('title subtitle authorName coverImage category formats rating numReviews price isPublished createdAt');
+    }
+    const books = await query.populate('category', 'name slug');
     res.json(books);
   } catch (error) {
     res.status(500).json({ message: error.message });
