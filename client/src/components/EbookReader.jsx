@@ -17,6 +17,7 @@ import {
   FileText, 
   ExternalLink,
   ChevronLeft,
+  ChevronRight,
   Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -204,10 +205,27 @@ const EbookReader = () => {
   if (!pdfUrl && !epubUrl && !docxUrl) return <div className="text-center py-20 text-red-500 font-poppins font-bold">No digital format files available for this book.</div>;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center py-4 md:py-8 px-4 transition-colors duration-300 ${darkMode ? 'bg-slate-950' : 'bg-slate-50'}`}>
+    <div className={`min-h-screen flex flex-col items-center py-4 md:py-8 px-4 transition-colors duration-300 ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}`}>
       
+      {/* Premium Book Metadata Header */}
+      {book && (
+        <div className="text-center mb-6 max-w-2xl px-4">
+          <h1 className={`text-2xl md:text-3xl font-black font-poppins tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            {book.title}
+          </h1>
+          {book.subtitle && (
+            <p className={`text-xs md:text-sm font-medium mt-1 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+              {book.subtitle}
+            </p>
+          )}
+          <p className={`text-xs md:text-sm font-bold mt-2 tracking-widest uppercase ${darkMode ? 'text-primary-400' : 'text-primary-600'}`}>
+            By {book.authorName}
+          </p>
+        </div>
+      )}
+
       {/* Top Toolbar */}
-      <div className={`p-4 rounded-3xl shadow-xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all ${darkMode ? 'bg-[#0d1526]/90 text-slate-200 border-white/10' : 'bg-white text-slate-800 border-slate-200'}`}>
+      <div className={`p-4 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/80 text-slate-200 border-white/10 shadow-black/30' : 'bg-white/80 text-slate-800 border-slate-200/80'}`}>
         
         {/* Left Toolbar Part: Return & DarkMode */}
         <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
@@ -299,11 +317,11 @@ const EbookReader = () => {
 
       {/* PDF Controls Pagination Bar (only visible when PDF is selected) */}
       {selectedFormat === 'pdf' && (
-        <div className={`mt-4 mb-6 px-5 py-2.5 rounded-full flex items-center gap-5 shadow-md border ${darkMode ? 'bg-[#0d1526] border-white/5' : 'bg-white border-slate-200'}`}>
+        <div className={`mt-4 mb-6 px-5 py-2.5 rounded-full flex items-center gap-5 shadow-lg border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/80 border-white/10 text-white shadow-black/20' : 'bg-white/80 border-slate-200/80 text-slate-855'}`}>
           <button 
             disabled={pageNumber <= 1} 
             onClick={() => changePage(-1)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition-all hover:scale-105 active:scale-95 ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
           >
             Prev
           </button>
@@ -313,7 +331,7 @@ const EbookReader = () => {
           <button 
             disabled={pageNumber >= numPages}
             onClick={() => changePage(1)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase disabled:opacity-30 disabled:pointer-events-none transition-all hover:scale-105 active:scale-95 ${darkMode ? 'bg-white/5 text-white hover:bg-white/10' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
           >
             Next
           </button>
@@ -321,8 +339,29 @@ const EbookReader = () => {
       )}
 
       {/* Main Content Area */}
-      <div id="pdf-container" className="w-full max-w-5xl mt-4 flex justify-center">
+      <div id="pdf-container" className="w-full max-w-5xl mt-4 flex justify-center relative group">
         
+        {/* Floating Page Flip Arrows (Desktop only) */}
+        {selectedFormat === 'pdf' && (
+          <>
+            <button 
+              disabled={pageNumber <= 1}
+              onClick={() => changePage(-1)}
+              className={`absolute left-[-60px] top-1/2 -translate-y-1/2 z-40 p-4 rounded-full border shadow-2xl transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none hidden lg:flex items-center justify-center backdrop-blur-md ${darkMode ? 'bg-slate-900/80 hover:bg-slate-800 border-white/10 text-white' : 'bg-white/80 hover:bg-white border-slate-200 text-slate-800'}`}
+            >
+              <ChevronLeft size={24} />
+            </button>
+            
+            <button 
+              disabled={pageNumber >= numPages}
+              onClick={() => changePage(1)}
+              className={`absolute right-[-60px] top-1/2 -translate-y-1/2 z-40 p-4 rounded-full border shadow-2xl transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95 disabled:opacity-0 disabled:pointer-events-none hidden lg:flex items-center justify-center backdrop-blur-md ${darkMode ? 'bg-slate-900/80 hover:bg-slate-800 border-white/10 text-white' : 'bg-white/80 hover:bg-white border-slate-200 text-slate-800'}`}
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
+
         {/* Render PDF Format */}
         {selectedFormat === 'pdf' && (
           <div 
@@ -339,6 +378,13 @@ const EbookReader = () => {
             }}
             onContextMenu={e => e.preventDefault()}
           >
+            {/* Paper stack background page-edges effect on desktop */}
+            {bookMode && (
+              <>
+                <div className="absolute right-[-4px] top-[4px] bottom-[4px] w-[4px] bg-slate-300 dark:bg-slate-800 rounded-r border-y border-r border-slate-400/20 z-0 pointer-events-none hidden md:block" />
+                <div className="absolute right-[-8px] top-[8px] bottom-[8px] w-[4px] bg-slate-200 dark:bg-slate-900 rounded-r border-y border-r border-slate-400/10 z-0 pointer-events-none hidden md:block" />
+              </>
+            )}
             {/* Dynamic Watermark Overlay to prevent piracy/screenshots */}
             <div className="absolute inset-0 pointer-events-none select-none z-30 flex flex-wrap gap-x-16 gap-y-24 items-center justify-center p-12 overflow-hidden opacity-[0.06] dark:opacity-[0.03]">
               {Array.from({ length: 16 }).map((_, i) => (
