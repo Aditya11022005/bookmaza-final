@@ -2,8 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-import { storage, cloudinary } from '../utils/cloudinary.js';
-import { uploadS3 } from '../utils/s3.js';
+import { cloudinary } from '../utils/cloudinary.js';
 import { protect, author } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -26,136 +25,109 @@ const localDiskStorage = multer.diskStorage({
 });
 
 const uploadLocal = multer({ storage: localDiskStorage });
-const uploadCloudinary = multer({ storage });
+
+// Helper to upload a local file to Cloudinary
+const uploadToCloudinaryHelper = async (filePath, originalName) => {
+  const fileExtension = path.extname(originalName).toLowerCase();
+  let resourceType = 'raw';
+  if (['.mp3', '.wav', '.m4a', '.aac'].includes(fileExtension)) {
+    resourceType = 'video';
+  }
+  const result = await cloudinary.uploader.upload(filePath, {
+    folder: 'pustakmaza_protected',
+    resource_type: resourceType,
+  });
+  return { url: result.secure_url, key: result.secure_url };
+};
 
 // @desc    Upload public image (Book Cover, Banner)
 // @route   POST /api/upload/image
 router.post('/image', protect, (req, res) => {
-  const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
-
-  if (!isCloudinaryConfigured) {
-    // Force local upload fallback
-    uploadLocal.single('image')(req, res, (err) => {
-      if (err) {
-        return res.status(400).json({ message: err.message });
-      }
-      if (req.file) {
-        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-        return res.json({ message: 'Image uploaded locally', url });
-      }
+  uploadLocal.single('image')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
-    });
-  } else {
-    // Try Cloudinary
-    uploadCloudinary.single('image')(req, res, (err) => {
-      if (err) {
-        console.warn('Cloudinary upload failed, falling back to local storage:', err.message);
-        // Fallback to local upload
-        return uploadLocal.single('image')(req, res, (localErr) => {
-          if (localErr) {
-            return res.status(400).json({ message: localErr.message });
-          }
-          if (req.file) {
-            const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-            return res.json({ message: 'Image uploaded locally', url });
-          }
-          return res.status(400).json({ message: 'No file uploaded' });
-        });
-      }
-      if (req.file) {
-        return res.json({
-          message: 'Image uploaded successfully',
-          url: req.file.path,
-        });
-      }
-      return res.status(400).json({ message: 'No file uploaded' });
-    });
-  }
-});
-
-// Helper to handle local upload followed by Cloudinary upload if configured
-const handleLocalOrCloudinaryUpload = (req, res, localErr) => {
-  if (localErr) {
-    return res.status(400).json({ message: localErr.message });
-  }
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-
-  const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
-  if (isCloudinaryConfigured) {
-    const fileExtension = path.extname(req.file.originalname).toLowerCase();
-    let resourceType = 'raw';
-    if (['.mp3', '.wav', '.m4a', '.aac'].includes(fileExtension)) {
-      resourceType = 'video';
     }
 
-    cloudinary.uploader.upload(req.file.path, {
-      folder: 'pustakmaza_protected',
-      resource_type: resourceType,
-    })
-    .then((result) => {
-      // Clean up local temp file
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
+    
+    if (isCloudinaryConfigured) {
       try {
-        fs.unlinkSync(req.file.path);
-      } catch (err) {
-        console.error('Failed to clean up temp file:', err);
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'pustakmaza_media',
+        });
+        
+        // Clean up local temp file since it is now on Cloudinary
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkErr) {
+          console.error('Failed to clean up temp file:', unlinkErr);
+        }
+        
+        return res.json({
+          message: 'Image uploaded successfully to Cloudinary',
+          url: result.secure_url,
+        });
+      } catch (uploadErr) {
+        console.warn('Cloudinary upload failed, falling back to local storage:', uploadErr.message);
+        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        return res.json({
+          message: 'Image uploaded locally (Cloudinary failed)',
+          url,
+        });
       }
-      return res.json({
-        message: 'Protected file uploaded successfully to Cloudinary',
-        url: result.secure_url,
-        key: result.secure_url,
-      });
-    })
-    .catch((uploadErr) => {
-      console.warn('Cloudinary upload failed, falling back to local serving:', uploadErr.message);
+    } else {
       const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
       return res.json({
-        message: 'Protected file uploaded locally (Cloudinary failed)',
+        message: 'Image uploaded locally',
         url,
-        key: url,
       });
-    });
-  } else {
+    }
+  });
+});
+
+// @desc    Upload protected file (PDF, MP3)
+// @route   POST /api/upload/protected
+router.post('/protected', protect, author, (req, res) => {
+  uploadLocal.single('file')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
+
+    // 1. Try Cloudinary if configured
+    if (isCloudinaryConfigured) {
+      try {
+        const { url, key } = await uploadToCloudinaryHelper(req.file.path, req.file.originalname);
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkErr) {
+          console.error('Failed to clean up Cloudinary temp file:', unlinkErr);
+        }
+        return res.json({
+          message: 'Protected file uploaded successfully to Cloudinary',
+          url,
+          key,
+        });
+      } catch (cloudinaryErr) {
+        console.warn('Cloudinary upload failed, falling back to local serving:', cloudinaryErr.message);
+      }
+    }
+
+    // 2. Fallback to local storage (Cloudinary failed or not configured)
     const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     return res.json({
       message: 'Protected file uploaded locally',
       url,
       key: url,
     });
-  }
-};
-
-// @desc    Upload protected file (PDF, MP3) to S3
-// @route   POST /api/upload/protected
-router.post('/protected', protect, author, (req, res) => {
-  const isS3Configured = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_ACCESS_KEY_ID !== 'key';
-
-  if (!isS3Configured) {
-    // Force local/Cloudinary upload fallback
-    uploadLocal.single('file')(req, res, (err) => {
-      handleLocalOrCloudinaryUpload(req, res, err);
-    });
-  } else {
-    // Try S3
-    uploadS3.single('file')(req, res, (err) => {
-      if (err) {
-        console.warn('S3 upload failed, falling back to local/Cloudinary storage:', err.message);
-        // Fallback to local/Cloudinary upload
-        return uploadLocal.single('file')(req, res, (localErr) => {
-          handleLocalOrCloudinaryUpload(req, res, localErr);
-        });
-      }
-      if (req.file) {
-        return res.json({
-          message: 'Protected file uploaded successfully to S3',
-          url: req.file.location, // S3 URL
-          key: req.file.key, // used for pre-signed URLs
-        });
-      }
-      return res.status(400).json({ message: 'No file uploaded' });
-    });
-  }
+  });
 });
 
 export default router;
