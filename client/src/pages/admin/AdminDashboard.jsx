@@ -4,7 +4,7 @@ import {
   BookOpen, Users, ShoppingBag, UserCog,
   TrendingUp, TrendingDown, ArrowRight,
   Package, CheckCircle2, Clock, XCircle,
-  Star, Eye, Loader, IndianRupee
+  Star, Eye, Loader, IndianRupee, Headphones
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
@@ -137,6 +137,10 @@ const AdminDashboard = () => {
   const totalOrders = orders.length;
   const totalUsers = users.filter(u => u.role === 'customer').length;
 
+  const hardcopyOrdersCount = orders.filter(o => o.orderItems?.some(item => (item.format || '').toLowerCase() === 'hardcopy')).length;
+  const ebookOrdersCount = orders.filter(o => o.orderItems?.some(item => (item.format || '').toLowerCase() === 'ebook')).length;
+  const audiobookOrdersCount = orders.filter(o => o.orderItems?.some(item => (item.format || '').toLowerCase() === 'audiobook')).length;
+
   const paidOrders = orders.filter(o => o.isPaid);
   const totalRevenue = paidOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
 
@@ -265,6 +269,62 @@ const AdminDashboard = () => {
           );
         })}
       </motion.div>
+
+      {/* ── Orders By Format Breakdown ───────────────────────── */}
+      <div className="space-y-4">
+        <h2 className="text-white font-poppins font-bold text-[15px] tracking-tight">Orders by Format</h2>
+        <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {[
+            {
+              label: 'Hardcopy Orders',
+              value: hardcopyOrdersCount,
+              desc: 'Physical printing & delivery orders',
+              icon: Package,
+              color: 'from-amber-600 to-orange-700',
+              bg: 'bg-amber-500/10',
+              text: 'text-amber-400',
+            },
+            {
+              label: 'E-Book Orders',
+              value: ebookOrdersCount,
+              desc: 'Digital book instant downloads',
+              icon: BookOpen,
+              color: 'from-indigo-600 to-purple-700',
+              bg: 'bg-indigo-500/10',
+              text: 'text-indigo-400',
+            },
+            {
+              label: 'Audiobook Orders',
+              value: audiobookOrdersCount,
+              desc: 'Digital audiobook stream access',
+              icon: Headphones,
+              color: 'from-pink-600 to-rose-700',
+              bg: 'bg-pink-500/10',
+              text: 'text-pink-400',
+            },
+          ].map((card) => {
+            const Icon = card.icon;
+            return (
+              <motion.div key={card.label} variants={fadeUp} className="relative bg-[#0d1526] border border-white/[0.06] rounded-2xl p-5 overflow-hidden hover:border-white/[0.12] transition-all group">
+                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${card.color} opacity-10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none`} />
+
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center`}>
+                    <Icon size={20} className={card.text} />
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${card.bg} ${card.text}`}>
+                    Format
+                  </span>
+                </div>
+
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-1">{card.label}</p>
+                <p className="text-2xl font-poppins font-black text-white">{card.value}</p>
+                <p className="text-slate-600 text-[11px] font-medium mt-1">{card.desc}</p>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </div>
 
       {/* ── Charts Row ──────────────────────────────────────── */}
       <motion.div variants={stagger} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-3 gap-5">
