@@ -38,7 +38,7 @@ const Home = () => {
   const promoBanner = banners.find(b => b.type === 'promo');
 
   return (
-    <div className="flex flex-col bg-[#f8fafc] w-full pt-0">
+    <div className="flex flex-col bg-[#f8fafc] w-full pt-0 overflow-x-hidden">
       {/* 1. Hero Matrix */}
       <HeroSlider banners={heroBanners} />
 
