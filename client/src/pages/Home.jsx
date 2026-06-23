@@ -39,7 +39,6 @@ const Home = () => {
 
   return (
     <div className="flex flex-col bg-[#f8fafc] w-full pt-0">
-      <AnnouncementBanner />
       {/* 1. Hero Matrix */}
       <HeroSlider banners={heroBanners} />
 
@@ -47,6 +46,8 @@ const Home = () => {
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 py-20">
         <CategoryGrid categories={categories} />
       </div>
+
+      <AnnouncementBanner />
 
       {/* 3. Primary Trending */}
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 pb-16">
