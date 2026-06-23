@@ -192,10 +192,7 @@ const AdminLogin = () => {
               </button>
             </form>
 
-            {/* Dev hint */}
-            <p className="text-center text-gray-400 text-xs mt-10 font-mono">
-              dev login: admin@pustakmaza.com / admin
-            </p>
+
             
           </div>
         </div>
