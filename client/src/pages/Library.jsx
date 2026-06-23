@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Headphones, Play, BookText, Clock, CheckCircle2, LibraryBig } from 'lucide-react';
+import { BookOpen, Headphones, Play, BookText, Clock, CheckCircle2, LibraryBig, Grid, Layers } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import useOrderStore from '../store/orderStore';
 import useAuthStore from '../store/authStore';
@@ -71,6 +71,92 @@ const LibraryCard = ({ item, onClick }) => {
   );
 };
 
+const ShelfBook = ({ item, onClick }) => {
+  const isStarted = item.progress > 0 && item.progress < 100;
+
+  return (
+    <div className="relative pb-10 pt-4 flex flex-col items-center group">
+      {/* 3D Book Container */}
+      <div 
+        className="book-scene cursor-pointer"
+        onClick={() => onClick(item.type, item.bookId)}
+      >
+        <div className="book-wrap">
+          {/* Front Cover */}
+          <div 
+            className="book-face book-front" 
+            style={{ 
+              backgroundImage: `url(${getOptimizedImageUrl(item.coverImage, 300)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          >
+            {/* Format Badge */}
+            <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 border border-white/10">
+              {item.type === 'read' ? <BookOpen size={10} className="text-blue-300"/> : <Headphones size={10} className="text-purple-300"/>}
+              {item.format}
+            </div>
+
+            {/* Progress overlay */}
+            {item.progress > 0 && (
+              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/50 rounded-b-[4px]">
+                <div 
+                  className={`h-full ${item.type === 'read' ? 'bg-blue-500' : 'bg-purple-500'}`} 
+                  style={{ width: `${item.progress}%` }}
+                ></div>
+              </div>
+            )}
+          </div>
+
+          {/* Spine (Left side thickness) */}
+          <div 
+            className="book-spine"
+            style={{
+              background: item.type === 'read' 
+                ? 'linear-gradient(to right, #1d4ed8 0%, #1e3a8a 100%)' 
+                : 'linear-gradient(to right, #7c3aed 0%, #6d28d9 100%)'
+            }}
+          />
+
+          {/* Paper Pages (Right side thickness) */}
+          <div className="book-pages" />
+
+          {/* Back Cover */}
+          <div 
+            className="book-face book-back" 
+            style={{
+              backgroundColor: item.type === 'read' ? '#172554' : '#2e1065'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Individual Wooden Shelf Plank */}
+      <div className="absolute bottom-10 left-0 right-0 h-6 z-10 pointer-events-none">
+        <div className="shelf-plank" />
+      </div>
+
+      {/* Title & Quick Action */}
+      <div className="mt-8 text-center max-w-[140px] z-20 relative px-2">
+        <h4 className="font-poppins font-black text-sm text-[#1e293b] line-clamp-1 group-hover:text-primary-600 transition-colors" title={item.title}>
+          {item.title}
+        </h4>
+        <p className="text-[#64748b] text-[10px] font-bold uppercase tracking-wider mb-2">by {item.author}</p>
+        <button 
+          onClick={() => onClick(item.type, item.bookId)}
+          className={`px-4 py-1.5 rounded-lg text-white text-[10px] font-black uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] cursor-pointer ${
+            item.type === 'read' 
+              ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' 
+              : 'bg-purple-600 hover:bg-purple-700 shadow-purple-600/20'
+          }`}
+        >
+          {item.type === 'read' ? (isStarted ? 'Continue' : 'Read') : (isStarted ? 'Resume' : 'Listen')}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Library = () => {
   usePageMeta('My Library', 'Access your purchased ebooks and audiobooks instantly in your Pustak Maza digital library.');
   const navigate = useNavigate();
@@ -80,6 +166,7 @@ const Library = () => {
   const [purchasedBooks, setPurchasedBooks] = useState([]);
   const [progressList, setProgressList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('bookshelf'); // 'bookshelf' | 'grid'
 
   // Load database items & progress
   useEffect(() => {
@@ -194,7 +281,7 @@ const Library = () => {
       transition={{ duration: 0.5 }}
       className="pb-20 font-poppins"
     >
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+      <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
          <div>
             <h1 className="text-3xl font-poppins font-black text-[#1e293b] mb-2 flex items-center gap-3">
                <div className="w-10 h-10 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center shadow-inner">
@@ -204,6 +291,24 @@ const Library = () => {
             </h1>
             <p className="text-[#64748b]">Access your purchased ebooks and audiobooks instantly.</p>
          </div>
+
+         {/* View Mode Toggle Controls */}
+         {combinedLibrary.length > 0 && (
+           <div className="flex bg-[#f1f5f9] p-1 rounded-2xl border border-slate-200/80 w-fit shrink-0 self-start sm:self-auto shadow-inner">
+              <button 
+                 onClick={() => setViewMode('bookshelf')}
+                 className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'bookshelf' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                 <Layers size={14} /> 3D Bookshelf
+              </button>
+              <button 
+                 onClick={() => setViewMode('grid')}
+                 className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                 <Grid size={14} /> Classic Grid
+              </button>
+           </div>
+         )}
       </div>
 
       {combinedLibrary.length === 0 ? (
@@ -217,7 +322,22 @@ const Library = () => {
                Explore Digital Books
             </Link>
          </div>
+      ) : viewMode === 'bookshelf' ? (
+         /* 3D Virtual Bookshelf View Mode */
+         <div className="bg-[#fcf8f2] rounded-[2.5rem] border border-[#eadaab]/60 p-6 sm:p-10 shadow-[inset_0_4px_20px_rgba(0,0,0,0.03)] relative overflow-hidden">
+            {/* Wooden poles/columns decoration on left and right edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-[#573314] to-[#855329] border-r border-[#3e220a] z-30 pointer-events-none rounded-l-[2.5rem]"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-[#573314] to-[#855329] border-l border-[#3e220a] z-30 pointer-events-none rounded-r-[2.5rem]"></div>
+
+            {/* Grid of Books */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-16 px-4 py-6">
+               {combinedLibrary.map((item) => (
+                  <ShelfBook key={item.id} item={item} onClick={handleAccessContent} />
+               ))}
+            </div>
+         </div>
       ) : (
+         /* Classic List Grid View Mode */
          <div className="space-y-16">
             
             {activeBooks.length > 0 && (
@@ -287,3 +407,4 @@ const Library = () => {
 };
 
 export default Library;
+
