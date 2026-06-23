@@ -22,7 +22,9 @@ const AdminBooks = () => {
   const [isPublished, setIsPublished] = useState(true);
   const [isAnnounced, setIsAnnounced] = useState(false);
   const [launchDate, setLaunchDate] = useState('');
-  const [launchTime, setLaunchTime] = useState('00:00');
+  const [launchHour, setLaunchHour] = useState('12');
+  const [launchMinute, setLaunchMinute] = useState('00');
+  const [launchAmpm, setLaunchAmpm] = useState('PM');
 
   // New metadata fields
   const [isbn, setIsbn] = useState('');
@@ -136,7 +138,9 @@ const AdminBooks = () => {
     setPothiLink('');
     setIsAnnounced(false);
     setLaunchDate('');
-    setLaunchTime('00:00');
+    setLaunchHour('12');
+    setLaunchMinute('00');
+    setLaunchAmpm('PM');
     
     setIsModalOpen(true);
   };
@@ -158,12 +162,21 @@ const AdminBooks = () => {
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
       setLaunchDate(`${year}-${month}-${day}`);
-      const hours = String(dateObj.getHours()).padStart(2, '0');
-      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-      setLaunchTime(`${hours}:${minutes}`);
+      
+      const hours24 = dateObj.getHours();
+      const minutesVal = String(dateObj.getMinutes()).padStart(2, '0');
+      let hours12 = hours24 % 12;
+      hours12 = hours12 === 0 ? 12 : hours12;
+      const ampmVal = hours24 >= 12 ? 'PM' : 'AM';
+      
+      setLaunchHour(String(hours12));
+      setLaunchMinute(minutesVal);
+      setLaunchAmpm(ampmVal);
     } else {
       setLaunchDate('');
-      setLaunchTime('00:00');
+      setLaunchHour('12');
+      setLaunchMinute('00');
+      setLaunchAmpm('PM');
     }
 
     setEbookAvailable(book.formats?.ebook?.isAvailable || false);
@@ -243,8 +256,14 @@ const AdminBooks = () => {
     let combinedLaunchDate = null;
     if (isAnnounced && launchDate) {
       const [year, month, day] = launchDate.split('-').map(Number);
-      const [hours, minutes] = (launchTime || '00:00').split(':').map(Number);
-      combinedLaunchDate = new Date(year, month - 1, day, hours, minutes).toISOString();
+      let hours24 = parseInt(launchHour, 10);
+      if (isNaN(hours24) || hours24 < 1 || hours24 > 12) hours24 = 12;
+      const minutesVal = parseInt(launchMinute, 10) || 0;
+
+      if (launchAmpm === 'PM' && hours24 < 12) hours24 += 12;
+      if (launchAmpm === 'AM' && hours24 === 12) hours24 = 0;
+
+      combinedLaunchDate = new Date(year, month - 1, day, hours24, minutesVal).toISOString();
     }
 
     const payload = {
@@ -619,15 +638,54 @@ const AdminBooks = () => {
                             </div>
                             <div>
                               <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Time</span>
-                              <div className="relative">
-                                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                                <input 
-                                  type="time" 
-                                  required={isAnnounced}
-                                  value={launchTime}
-                                  onChange={(e) => setLaunchTime(e.target.value)}
-                                  className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
-                                />
+                              <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                  <input 
+                                    type="number" 
+                                    required={isAnnounced}
+                                    placeholder="HH"
+                                    min="1"
+                                    max="12"
+                                    value={launchHour}
+                                    onChange={(e) => setLaunchHour(e.target.value)}
+                                    onBlur={() => {
+                                      let val = parseInt(launchHour, 10);
+                                      if (isNaN(val) || val < 1) val = 12;
+                                      if (val > 12) val = 12;
+                                      setLaunchHour(String(val));
+                                    }}
+                                    className="w-full text-center bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl py-2.5 focus:outline-none focus:border-primary-500/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                  />
+                                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-bold pointer-events-none">HR</span>
+                                </div>
+                                <span className="text-slate-600 font-bold">:</span>
+                                <div className="relative flex-1">
+                                  <input 
+                                    type="number" 
+                                    required={isAnnounced}
+                                    placeholder="MM"
+                                    min="0"
+                                    max="59"
+                                    value={launchMinute}
+                                    onChange={(e) => setLaunchMinute(e.target.value)}
+                                    onBlur={() => {
+                                      let val = parseInt(launchMinute, 10);
+                                      if (isNaN(val) || val < 0) val = 0;
+                                      if (val > 59) val = 59;
+                                      setLaunchMinute(String(val).padStart(2, '0'));
+                                    }}
+                                    className="w-full text-center bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl py-2.5 focus:outline-none focus:border-primary-500/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                  />
+                                  <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-bold pointer-events-none">MIN</span>
+                                </div>
+                                <select
+                                  value={launchAmpm}
+                                  onChange={(e) => setLaunchAmpm(e.target.value)}
+                                  className="bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer text-center font-bold"
+                                >
+                                  <option value="AM">AM</option>
+                                  <option value="PM">PM</option>
+                                </select>
                               </div>
                             </div>
                           </div>
