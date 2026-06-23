@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import usePageMeta from '../hooks/usePageMeta';
+import AnnouncementBanner from '../components/home/AnnouncementBanner';
 import HeroSlider from '../components/home/HeroSlider';
 import CategoryGrid from '../components/home/CategoryGrid';
 import BookSlider from '../components/home/BookSlider';
@@ -38,6 +39,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col bg-[#f8fafc] w-full pt-0">
+      <AnnouncementBanner />
       {/* 1. Hero Matrix */}
       <HeroSlider banners={heroBanners} />
 

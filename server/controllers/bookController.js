@@ -17,7 +17,10 @@ const getBooks = async (req, res) => {
 
     const filter = { ...keyword };
     if (req.query.all !== 'true') {
-      filter.isPublished = true;
+      filter.$or = [
+        { isPublished: true },
+        { isAnnounced: true, launchDate: { $lte: new Date() } }
+      ];
     }
     if (req.query.author) {
       filter.author = req.query.author;
@@ -75,6 +78,8 @@ const createBook = async (req, res) => {
       coverImage, 
       images,
       isPublished,
+      isAnnounced,
+      launchDate,
       isbn,
       discountPercentage,
       pages,
@@ -113,6 +118,8 @@ const createBook = async (req, res) => {
       coverImage,
       images: Array.isArray(images) ? images : [],
       isPublished,
+      isAnnounced: isAnnounced || false,
+      launchDate: launchDate ? new Date(launchDate) : undefined,
       isbn,
       discountPercentage: Number(discountPercentage) || 0,
       pages: Number(pages) || undefined,
@@ -182,6 +189,8 @@ const updateBook = async (req, res) => {
       coverImage, 
       images,
       isPublished,
+      isAnnounced,
+      launchDate,
       isbn,
       discountPercentage,
       pages,
@@ -236,6 +245,8 @@ const updateBook = async (req, res) => {
       book.coverImage = coverImage || book.coverImage;
       book.images = Array.isArray(images) ? images : book.images;
       book.isPublished = isPublished !== undefined ? isPublished : book.isPublished;
+      book.isAnnounced = isAnnounced !== undefined ? isAnnounced : book.isAnnounced;
+      book.launchDate = launchDate !== undefined ? (launchDate ? new Date(launchDate) : undefined) : book.launchDate;
       book.isbn = isbn !== undefined ? isbn : book.isbn;
       book.discountPercentage = discountPercentage !== undefined ? Number(discountPercentage) : book.discountPercentage;
       book.pages = pages !== undefined ? Number(pages) : book.pages;
@@ -470,4 +481,21 @@ const proxyPdf = async (req, res) => {
   }
 };
 
-export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview, deleteBookReview, proxyPdf };
+// @desc    Get the active scheduled launch announcement book
+// @route   GET /api/books/announcement
+const getAnnouncementBook = async (req, res) => {
+  try {
+    const book = await Book.findOne({
+      isAnnounced: true,
+      launchDate: { $gt: new Date() }
+    })
+    .sort({ launchDate: 1 })
+    .populate('category', 'name slug');
+
+    res.json(book);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { getBooks, getBookById, createBook, updateBook, deleteBook, createBookReview, deleteBookReview, proxyPdf, getAnnouncementBook };

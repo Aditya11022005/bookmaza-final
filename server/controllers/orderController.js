@@ -95,6 +95,92 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// sendAdminOrderNotificationEmail notifies the admin of a new order
+const sendAdminOrderNotificationEmail = async (orderId) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@pustakmaza.com';
+    const order = await Order.findById(orderId).populate('user');
+    if (!order || !order.user) return;
+
+    const itemsRowsHtml = order.orderItems.map(item => `
+      <tr>
+        <td style="padding: 10px; border-bottom: 1px solid #334155; color: #cbd5e1; font-size: 13px;">${item.title} (${item.format})</td>
+        <td style="padding: 10px; border-bottom: 1px solid #334155; color: #cbd5e1; text-align: center; font-size: 13px;">${item.qty}</td>
+        <td style="padding: 10px; border-bottom: 1px solid #334155; color: #cbd5e1; text-align: right; font-size: 13px;">₹${item.price}</td>
+      </tr>
+    `).join('');
+
+    const shippingInfoHtml = order.shippingAddress && order.shippingAddress.street ? `
+      <div style="margin-top: 20px; padding: 15px; border: 1px solid #334155; border-radius: 12px; background-color: #1e293b; color: #cbd5e1;">
+        <h4 style="color: #a855f7; margin-top: 0; font-size: 14px;">Shipping Address:</h4>
+        <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #94a3b8;">
+          ${order.shippingAddress.street}<br>
+          ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.zipCode}<br>
+          ${order.shippingAddress.country}
+        </p>
+      </div>
+    ` : '';
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b1329; color: #ffffff;">
+        <h2 style="color: #a855f7; text-align: center; margin-bottom: 5px;">New Order Alert! 🔔</h2>
+        <p style="text-align: center; color: #94a3b8; font-size: 12px; font-family: monospace; margin-top: 0;">Order ID: ${order._id}</p>
+        
+        <p style="font-size: 15px; color: #cbd5e1;">Hi Admin,</p>
+        <p style="font-size: 14px; color: #94a3b8; line-height: 1.5;">
+          A new order has been successfully placed on Pustak Maza. Here are the details of the purchase:
+        </p>
+
+        <h3 style="color: #a855f7; border-bottom: 1px solid #334155; padding-bottom: 5px; font-size: 15px;">Customer Details:</h3>
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6; margin: 5px 0;">
+          <b>Name:</b> ${order.user.name}<br>
+          <b>Email:</b> ${order.user.email}<br>
+          <b>Phone:</b> ${order.user.phone || 'N/A'}<br>
+        </p>
+
+        <h3 style="color: #a855f7; border-bottom: 1px solid #334155; padding-bottom: 5px; font-size: 15px; margin-top: 20px;">Order Summary:</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+          <thead>
+            <tr style="background-color: #1e293b; color: #a855f7;">
+              <th style="padding: 10px; text-align: left; font-size: 13px;">Book Title</th>
+              <th style="padding: 10px; text-align: center; width: 60px; font-size: 13px;">Qty</th>
+              <th style="padding: 10px; text-align: right; width: 80px; font-size: 13px;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsRowsHtml}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 15px; text-align: right; font-size: 13px; color: #cbd5e1;">
+          <p style="margin: 3px 0;">Subtotal: <b>₹${order.itemsPrice}</b></p>
+          <p style="margin: 3px 0;">Shipping: <b>₹${order.shippingPrice}</b></p>
+          <p style="margin: 5px 0; font-size: 16px; color: #a855f7; font-weight: bold;">Total Amount: <b>₹${order.totalPrice}</b></p>
+        </div>
+
+        <p style="font-size: 13px; color: #cbd5e1; margin-top: 15px;">
+          Payment Method: <b>${order.paymentMethod}</b><br>
+          Payment Status: <b style="color: ${order.isPaid ? '#10b981' : '#f59e0b'}">${order.isPaid ? 'Paid' : 'Pending (COD)'}</b>
+        </p>
+
+        ${shippingInfoHtml}
+
+        <p style="font-size: 12px; color: #64748b; border-top: 1px solid #334155; padding-top: 15px; margin-top: 25px; text-align: center;">
+          This is an automated notification from Pustak Maza Backend.
+        </p>
+      </div>
+    `;
+
+    await sendEmail({
+      email: adminEmail,
+      subject: `[NEW ORDER] Order Placed by ${order.user.name} - ₹${order.totalPrice}`,
+      html: emailHtml
+    });
+  } catch (error) {
+    console.error('Error sending admin order notification email:', error.message);
+  }
+};
+
 // sendOrderConfirmationEmail sends a beautifully styled order confirmation email
 const sendOrderConfirmationEmail = async (orderId) => {
   try {
@@ -110,7 +196,7 @@ const sendOrderConfirmationEmail = async (orderId) => {
         <div style="margin-top: 20px; padding: 15px; background-color: #1e1b4b; border: 1px solid #4338ca; border-radius: 12px; color: #ffffff;">
           <h3 style="color: #a855f7; margin-top: 0; font-size: 16px;">Your Digital Downloads:</h3>
           <ul style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
-      `;
+        `;
       for (const item of digitalItems) {
         const bookRecord = await Book.findById(item.book);
         if (bookRecord && bookRecord.formats[item.format]) {
@@ -198,6 +284,9 @@ const sendOrderConfirmationEmail = async (orderId) => {
       subject: `Order Confirmation - Pustak Maza [${order._id.toString().substring(order._id.toString().length - 8).toUpperCase()}]`,
       html: emailHtml
     });
+
+    // Notify the admin of the new purchase
+    await sendAdminOrderNotificationEmail(orderId);
   } catch (error) {
     console.error('Error sending order confirmation email:', error.message);
   }

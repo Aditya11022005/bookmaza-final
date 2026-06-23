@@ -20,6 +20,8 @@ const AdminBooks = () => {
   const [coverImage, setCoverImage] = useState('');
   const [images, setImages] = useState([]);
   const [isPublished, setIsPublished] = useState(true);
+  const [isAnnounced, setIsAnnounced] = useState(false);
+  const [launchDate, setLaunchDate] = useState('');
 
   // New metadata fields
   const [isbn, setIsbn] = useState('');
@@ -131,6 +133,8 @@ const AdminBooks = () => {
     setAmazonLink('');
     setFlipkartLink('');
     setPothiLink('');
+    setIsAnnounced(false);
+    setLaunchDate('');
     
     setIsModalOpen(true);
   };
@@ -145,6 +149,8 @@ const AdminBooks = () => {
     setCoverImage(book.coverImage || '');
     setImages(book.images || []);
     setIsPublished(book.isPublished);
+    setIsAnnounced(book.isAnnounced || false);
+    setLaunchDate(book.launchDate ? new Date(book.launchDate).toISOString().substring(0, 16) : '');
 
     setEbookAvailable(book.formats?.ebook?.isAvailable || false);
     setEbookPrice(book.formats?.ebook?.price || 0);
@@ -227,6 +233,8 @@ const AdminBooks = () => {
       coverImage,
       images,
       isPublished,
+      isAnnounced,
+      launchDate: isAnnounced ? launchDate : null,
       isbn,
       discountPercentage: Number(discountPercentage) || 0,
       pages: pages ? Number(pages) : undefined,
@@ -543,18 +551,49 @@ const AdminBooks = () => {
                             ))}
                           </select>
                         </div>
-                        <div className="flex items-end pb-1">
+                        <div className="flex flex-col gap-2 justify-end pb-1">
                           <label className="flex items-center gap-2 text-sm text-slate-300 font-medium cursor-pointer">
                             <input 
                               type="checkbox" 
                               checked={isPublished}
+                              disabled={isAnnounced}
                               onChange={(e) => setIsPublished(e.target.checked)}
-                              className="w-4 h-4 rounded border-white/20 bg-white/5 accent-primary-500" 
+                              className="w-4 h-4 rounded border-white/20 bg-white/5 accent-primary-500 disabled:opacity-50" 
                             />
                             Publish Immediately
                           </label>
+                          <label className="flex items-center gap-2 text-sm text-slate-300 font-medium cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={isAnnounced}
+                              onChange={(e) => {
+                                setIsAnnounced(e.target.checked);
+                                if (e.target.checked) {
+                                  setIsPublished(false);
+                                }
+                              }}
+                              className="w-4 h-4 rounded border-white/20 bg-white/5 accent-primary-500" 
+                            />
+                            Announce & Schedule Launch
+                          </label>
                         </div>
                       </div>
+
+                      {isAnnounced && (
+                        <div className="bg-[#1e293b]/40 border border-[#334155]/60 rounded-xl p-4 space-y-2">
+                          <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest">Launch Date & Time</label>
+                          <input 
+                            type="datetime-local" 
+                            required={isAnnounced}
+                            value={launchDate}
+                            onChange={(e) => setLaunchDate(e.target.value)}
+                            className="w-full max-w-xs bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
+                          />
+                          <p className="text-[11px] text-slate-400">
+                            The book will remain in draft mode until this time, and will automatically become available and public after it passes.
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Description</label>
                         <textarea 

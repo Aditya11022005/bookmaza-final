@@ -69,6 +69,8 @@ const bookSchema = new mongoose.Schema(
     rating: { type: Number, default: 0 },
     numReviews: { type: Number, default: 0 },
     isPublished: { type: Boolean, default: false },
+    isAnnounced: { type: Boolean, default: false },
+    launchDate: { type: Date },
   },
   { timestamps: true }
 );
