@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 
 const PromotionalBanner = ({ banner }) => {
-  // Fallback static details if no promo banner is configured
-  const title = banner?.title || "Summer Reading Festival";
-  const subtitle = banner?.subtitle || "Get up to 40% OFF on all Fiction and exclusive Audiobooks. Dive into a different world today.";
-  const image = banner?.image || "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1600&q=80";
-  const link = banner?.link || "/shop";
+  if (!banner) return null;
+
+  const title = banner.title;
+  const subtitle = banner.subtitle;
+  const image = banner.image;
+  const link = banner.link || "/shop";
+  const buttonText = banner.buttonText || "Claim Your Offer";
 
   return (
     <div className="w-full bg-[#1e293b] rounded-2xl overflow-hidden relative shadow-[0_15px_35px_-10px_rgba(106,13,173,0.25)] my-10 sm:my-16 group">
@@ -32,7 +34,7 @@ const PromotionalBanner = ({ banner }) => {
            to={link}
            className="bg-white hover:bg-primary-50 text-primary-600 font-bold px-7 sm:px-10 py-3 sm:py-4 rounded-xl text-sm sm:text-base shadow-[0_8px_20px_rgba(106,13,173,0.3)] transition-all transform hover:-translate-y-1 whitespace-nowrap flex-shrink-0"
          >
-            Claim Your Offer
+            {buttonText}
          </Link>
       </div>
     </div>

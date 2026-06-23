@@ -26,13 +26,14 @@ const getAllBanners = async (req, res) => {
 // @route   POST /api/banners
 const createBanner = async (req, res) => {
   try {
-    const { title, subtitle, image, link, type, isActive } = req.body;
+    const { title, subtitle, image, link, buttonText, type, isActive } = req.body;
 
     const banner = new Banner({
       title,
       subtitle,
       image,
       link,
+      buttonText,
       type: type || 'hero',
       isActive,
     });
@@ -48,7 +49,7 @@ const createBanner = async (req, res) => {
 // @route   PUT /api/banners/:id
 const updateBanner = async (req, res) => {
   try {
-    const { title, subtitle, image, link, type, isActive } = req.body;
+    const { title, subtitle, image, link, buttonText, type, isActive } = req.body;
     const banner = await Banner.findById(req.params.id);
 
     if (banner) {
@@ -56,6 +57,7 @@ const updateBanner = async (req, res) => {
       banner.subtitle = subtitle !== undefined ? subtitle : banner.subtitle;
       banner.image = image || banner.image;
       banner.link = link !== undefined ? link : banner.link;
+      banner.buttonText = buttonText !== undefined ? buttonText : banner.buttonText;
       banner.type = type || banner.type;
       banner.isActive = isActive !== undefined ? isActive : banner.isActive;
 

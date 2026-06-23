@@ -6,6 +6,7 @@ const bannerSchema = new mongoose.Schema(
     subtitle: { type: String },
     image: { type: String, required: true },
     link: { type: String },
+    buttonText: { type: String, default: 'Claim Your Offer' },
     type: { type: String, enum: ['hero', 'promo'], default: 'hero' },
     isActive: { type: Boolean, default: true },
   },

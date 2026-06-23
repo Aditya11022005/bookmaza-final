@@ -14,6 +14,7 @@ const AdminBanners = () => {
   const [subtitle, setSubtitle] = useState('');
   const [image, setImage] = useState('');
   const [link, setLink] = useState('');
+  const [buttonText, setButtonText] = useState('Claim Your Offer');
   const [type, setType] = useState('hero');
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -38,6 +39,7 @@ const AdminBanners = () => {
     setSubtitle('');
     setImage('');
     setLink('');
+    setButtonText('Claim Your Offer');
     setType('hero');
     setIsActive(true);
     setIsModalOpen(true);
@@ -49,6 +51,7 @@ const AdminBanners = () => {
     setSubtitle(banner.subtitle || '');
     setImage(banner.image || '');
     setLink(banner.link || '');
+    setButtonText(banner.buttonText || 'Claim Your Offer');
     setType(banner.type || 'hero');
     setIsActive(banner.isActive);
     setIsModalOpen(true);
@@ -81,7 +84,7 @@ const AdminBanners = () => {
       return;
     }
 
-    const payload = { title, subtitle, image, link, type, isActive };
+    const payload = { title, subtitle, image, link, buttonText, type, isActive };
 
     setLoading(true);
     try {
@@ -300,6 +303,19 @@ const AdminBanners = () => {
                       className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
                     />
                   </div>
+
+                  {type === 'promo' && (
+                    <div>
+                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Button Text (CTA Label)</label>
+                      <input 
+                        type="text" 
+                        value={buttonText}
+                        onChange={(e) => setButtonText(e.target.value)}
+                        placeholder="e.g. Claim Your Offer" 
+                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                  )}
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
