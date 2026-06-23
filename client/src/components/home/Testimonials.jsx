@@ -13,9 +13,9 @@ const Testimonials = () => {
         <h2 className="text-2xl sm:text-3xl md:text-5xl font-extrabold text-[#1e293b] mb-3 tracking-tight font-poppins">Loved by Readers Globally</h2>
         <p className="text-[#64748b] text-sm sm:text-base md:text-lg font-medium">Join thousands of book lovers who choose Pustak Maza.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+      <div className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-4 md:pb-0 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8 [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tests.map((t, i) => (
-          <div key={i} className="bg-white p-5 sm:p-7 md:p-10 rounded-2xl border border-[#e2e8f0] shadow-sm relative hover:shadow-[0_15px_35px_-10px_rgba(106,13,173,0.15)] hover:border-primary-200 transition-all duration-300 transform hover:-translate-y-1 group">
+          <div key={i} className="bg-white p-6 sm:p-7 md:p-10 rounded-2xl border border-[#e2e8f0] shadow-sm relative hover:shadow-[0_15px_35px_-10px_rgba(106,13,173,0.15)] hover:border-primary-200 transition-all duration-300 transform hover:-translate-y-1 group min-w-[85%] md:min-w-0 snap-center shrink-0">
             <Quote className="absolute top-5 right-5 sm:top-8 sm:right-8 text-primary-50 group-hover:text-primary-100 transition-colors" size={40} />
             <div className="flex gap-1 text-yellow-400 mb-4 relative z-10">
                <Star fill="currentColor" size={16}/><Star fill="currentColor" size={16}/><Star fill="currentColor" size={16}/><Star fill="currentColor" size={16}/><Star fill="currentColor" size={16}/>

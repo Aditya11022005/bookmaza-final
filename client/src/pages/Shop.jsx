@@ -34,10 +34,10 @@ const LazyCard = ({ children }) => {
   }, []);
 
   return (
-    <div ref={ref} className="h-full min-h-[420px]">
+    <div ref={ref} className="h-full min-h-0 sm:min-h-[420px]">
       {isIntersecting ? children : (
-        <div className="w-full h-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl animate-pulse flex flex-col p-5 min-h-[420px]">
-          <div className="w-full h-64 bg-slate-200 rounded-xl mb-4" />
+        <div className="w-full h-full bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl animate-pulse flex flex-col p-3 sm:p-5 min-h-0 sm:min-h-[420px]">
+          <div className="w-full aspect-[2/3] bg-slate-200 rounded-xl mb-4" />
           <div className="h-4 bg-slate-200 rounded w-1/4 mb-3" />
           <div className="h-6 bg-slate-200 rounded w-3/4 mb-3" />
           <div className="h-4 bg-slate-200 rounded w-1/2 mb-auto" />
@@ -201,44 +201,44 @@ const Shop = () => {
     return (
       <Link to={`/book/${book._id}`} className="group relative bg-white border border-[#e2e8f0] rounded-2xl overflow-hidden shadow-sm hover:shadow-[0_15px_35px_-10px_rgba(106,13,173,0.15)] hover:border-primary-200 transition-all duration-400 flex flex-col h-full transform hover:-translate-y-2">
          {/* Adaptive Format Icon Badge */}
-         <div className="absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-sm text-[#1e293b] shadow-sm border border-[#e2e8f0] text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
-           {activeFormat === 'audiobook' && <><Headphones size={12} className="text-primary-500"/> Audio</>}
-           {activeFormat === 'ebook' && <><BookOpen size={12} className="text-primary-500"/> Ebook</>}
-           {activeFormat === 'hardcopy' && <><Package size={12} className="text-primary-500"/> Physical</>}
+         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20 bg-white/95 backdrop-blur-sm text-[#1e293b] shadow-sm border border-[#e2e8f0] text-[8px] sm:text-[10px] font-bold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full uppercase tracking-wider flex items-center gap-1 sm:gap-1.5">
+           {activeFormat === 'audiobook' && <><Headphones size={10} className="text-primary-500 sm:w-3 sm:h-3"/> <span className="hidden xs:inline">Audio</span></>}
+           {activeFormat === 'ebook' && <><BookOpen size={10} className="text-primary-500 sm:w-3 sm:h-3"/> <span className="hidden xs:inline">Ebook</span></>}
+           {activeFormat === 'hardcopy' && <><Package size={10} className="text-primary-500 sm:w-3 sm:h-3"/> <span className="hidden xs:inline">Physical</span></>}
          </div>
          
          {/* Hover Heart Action */}
-         <button className="absolute top-3 right-3 z-30 w-8 h-8 flex flex-col items-center justify-center bg-white/95 hover:bg-white backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 shadow-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100" onClick={e => { e.preventDefault(); toast.success('Saved to wishlist'); }}>
-           <Heart size={16} />
+         <button className="absolute top-2 right-2 sm:top-3 sm:right-3 z-30 w-7 h-7 sm:w-8 sm:h-8 flex flex-col items-center justify-center bg-white/95 hover:bg-white backdrop-blur-sm rounded-full text-gray-400 hover:text-red-500 shadow-sm transition-all opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100" onClick={e => { e.preventDefault(); toast.success('Saved to wishlist'); }}>
+           <Heart size={14} className="sm:w-4 sm:h-4" />
          </button>
 
          {/* Full Bleed Image Block */}
-         <div className="w-full h-64 sm:h-72 relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
+         <div className="w-full aspect-[2/3] relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
            <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" />
          </div>
          
-         <div className="p-5 flex flex-col flex-grow relative z-20">
-           <span className="text-[10px] text-primary-600 font-extrabold uppercase tracking-widest mb-1.5">{book.category?.name || book.category}</span>
-           <h3 className="font-semibold text-lg leading-snug text-[#1e293b] mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors font-poppins">{book.title}</h3>
-           <p className="text-xs text-[#64748b] font-bold uppercase tracking-widest mb-4 flex-grow">{book.authorName}</p>
+         <div className="p-3 sm:p-5 flex flex-col flex-grow relative z-20">
+           <span className="text-[8px] sm:text-[10px] text-primary-600 font-extrabold uppercase tracking-widest mb-1 sm:mb-1.5">{book.category?.name || book.category}</span>
+           <h3 className="font-semibold text-xs sm:text-base leading-snug text-[#1e293b] mb-1 line-clamp-2 group-hover:text-primary-600 transition-colors font-poppins">{book.title}</h3>
+           <p className="text-[9px] sm:text-xs text-[#64748b] font-bold uppercase tracking-widest mb-3 sm:mb-4 flex-grow truncate">{book.authorName}</p>
            
-           <div className="flex justify-between items-end mb-4">
+           <div className="flex justify-between items-center mb-3 sm:mb-4 gap-1">
              <div className="flex flex-col">
-               <span className="text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
-               <span className={`text-2xl font-black leading-none font-poppins ${renderPrice === 0 ? "text-emerald-600" : "text-primary-700"}`}>{renderPrice === 0 ? "Free" : `₹${renderPrice}`}</span>
+               <span className="text-[9px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest mb-0.5">Price</span>
+               <span className={`text-base sm:text-2xl font-black leading-none font-poppins ${renderPrice === 0 ? "text-emerald-600" : "text-primary-700"}`}>{renderPrice === 0 ? "Free" : `₹${renderPrice}`}</span>
              </div>
-             <div className="flex items-center text-primary-600 font-bold text-[13px] bg-primary-50 px-1.5 py-0.5 rounded border border-primary-100">
-                <Star size={12} fill="currentColor" className="mr-1"/> {book.rating}
+             <div className="flex items-center text-primary-600 font-bold text-[10px] sm:text-[13px] bg-primary-50 px-1 sm:px-1.5 py-0.5 rounded border border-primary-100 shrink-0">
+                <Star size={10} fill="currentColor" className="mr-0.5 sm:mr-1 sm:w-3 sm:h-3"/> {book.rating}
              </div>
            </div>
 
-           <div className="flex gap-2 mt-auto">
-             <button onClick={(e) => handleBuyNow(e, book)} className="flex-1 py-3 rounded-xl bg-primary-500 text-white font-bold flex items-center justify-center gap-2 hover:bg-primary-600 shadow-[0_4px_10px_-2px_rgba(106,13,173,0.3)] transition-colors z-30">
+           <div className="flex gap-1.5 mt-auto">
+             <button onClick={(e) => handleBuyNow(e, book)} className="flex-1 py-2 sm:py-3 rounded-xl bg-primary-500 text-white font-bold flex items-center justify-center text-[10px] sm:text-sm gap-1 hover:bg-primary-600 shadow-[0_4px_10px_-2px_rgba(106,13,173,0.3)] transition-colors z-30">
                Buy Now
              </button>
-             <button onClick={(e) => handleAdd(e, book)} className="w-[3rem] shrink-0 rounded-xl border border-primary-100 bg-primary-50 text-primary-600 font-bold flex items-center justify-center hover:bg-primary-100 hover:text-primary-700 transition-colors z-30">
-               <ShoppingCart size={18} />
+             <button onClick={(e) => handleAdd(e, book)} className="w-[2.2rem] sm:w-[3rem] shrink-0 rounded-xl border border-primary-100 bg-primary-50 text-primary-600 font-bold flex items-center justify-center hover:bg-primary-100 hover:text-primary-700 transition-colors z-30">
+               <ShoppingCart size={14} className="sm:w-[18px] sm:h-[18px]" />
              </button>
            </div>
          </div>
@@ -443,7 +443,7 @@ const FilterPanel = ({
           </div>
 
           {filteredBooks.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
               {filteredBooks.map(book => (
                 <LazyCard key={book._id}>
                   <BookCard book={book} />

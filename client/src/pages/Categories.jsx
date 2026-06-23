@@ -92,7 +92,7 @@ const Categories = () => {
            </div>
          ) : (
            /* Master Grid */
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-8">
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((cat, idx) => {
                   const bg = gradients[idx % gradients.length];
@@ -107,22 +107,22 @@ const Categories = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: idx * 0.05 }}
                     >
-                      <Link to={`/category/${cat.slug || cat.name.toLowerCase()}`} className="group block relative bg-white border border-[#e2e8f0] rounded-[2rem] p-8 h-full shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(106,13,173,0.15)] hover:border-primary-300 transition-all duration-500 transform hover:-translate-y-2 overflow-hidden flex flex-col justify-between">
+                      <Link to={`/category/${cat.slug || cat.name.toLowerCase()}`} className="group block relative bg-white border border-[#e2e8f0] rounded-2xl sm:rounded-[2rem] p-4 sm:p-8 h-full shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(106,13,173,0.15)] hover:border-primary-300 transition-all duration-500 transform hover:-translate-y-2 overflow-hidden flex flex-col justify-between">
                          {/* Abstract Overlays */}
-                         <div className={`absolute top-0 right-0 w-32 h-32 ${bg} opacity-5 rounded-bl-[100%] group-hover:scale-125 transition-transform duration-700 pointer-events-none`}></div>
+                         <div className={`absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 ${bg} opacity-5 rounded-bl-[100%] group-hover:scale-125 transition-transform duration-700 pointer-events-none`}></div>
                          
                          <div className="relative z-10">
-                            <div className={`w-16 h-16 rounded-2xl ${bg} text-white flex items-center justify-center text-3xl mb-6 shadow-md shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300`}>
+                            <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl ${bg} text-white flex items-center justify-center text-xl sm:text-3xl mb-4 sm:mb-6 shadow-md shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300`}>
                                {icon}
                             </div>
-                            <h3 className="text-2xl font-black text-[#1e293b] mb-3 group-hover:text-primary-600 transition-colors font-poppins">{cat.name}</h3>
-                            <p className="text-[#64748b] font-medium leading-[1.7] mb-8">{desc}</p>
+                            <h3 className="text-base sm:text-2xl font-black text-[#1e293b] mb-1.5 sm:mb-3 group-hover:text-primary-600 transition-colors font-poppins">{cat.name}</h3>
+                            <p className="text-[#64748b] text-xs sm:text-base font-medium leading-[1.6] sm:leading-[1.7] mb-4 sm:mb-8 hidden sm:block">{desc}</p>
                          </div>
                          
-                         <div className="relative z-10 flex items-center justify-between border-t border-gray-100 pt-5 mt-auto">
-                            <span className="text-xs font-black uppercase tracking-widest text-[#64748b] bg-gray-50 px-3 py-1.5 rounded-lg border border-[#e2e8f0] group-hover:border-primary-200 group-hover:text-primary-600 transition-colors">{count} Books</span>
-                            <div className="w-10 h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-all shadow-sm">
-                              <ChevronRight size={20}/>
+                         <div className="relative z-10 flex items-center justify-between border-t border-gray-100 pt-3 sm:pt-5 mt-auto">
+                            <span className="text-[9px] sm:text-xs font-black uppercase tracking-widest text-[#64748b] bg-gray-50 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-[#e2e8f0] group-hover:border-primary-200 group-hover:text-primary-600 transition-colors">{count} Books</span>
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-all shadow-sm">
+                              <ChevronRight size={16} className="sm:w-5 sm:h-5"/>
                             </div>
                          </div>
                       </Link>
