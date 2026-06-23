@@ -70,7 +70,7 @@ const Register = () => {
         const btnElement = document.getElementById("google-signup-btn");
         if (btnElement) {
           window.google.accounts.id.initialize({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "217402764320-1u4j6cmr7gfti55ojs5f887jifl0u7h7.apps.googleusercontent.com",
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1048368400654-art7r8qgl8s3kiqb3320h31amtcgmlia.apps.googleusercontent.com",
             callback: handleGoogleCredentialResponse,
           });
           window.google.accounts.id.renderButton(
