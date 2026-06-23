@@ -94,7 +94,8 @@ const createBook = async (req, res) => {
       editor,
       amazonLink,
       flipkartLink,
-      pothiLink
+      pothiLink,
+      trailerUrl
     } = req.body;
     
     const parsedSummaryEn = summaryEn || description || '';
@@ -120,6 +121,7 @@ const createBook = async (req, res) => {
       isPublished,
       isAnnounced: isAnnounced || false,
       launchDate: launchDate ? new Date(launchDate) : undefined,
+      trailerUrl,
       isbn,
       discountPercentage: Number(discountPercentage) || 0,
       pages: Number(pages) || undefined,
@@ -205,7 +207,8 @@ const updateBook = async (req, res) => {
       editor,
       amazonLink,
       flipkartLink,
-      pothiLink
+      pothiLink,
+      trailerUrl
     } = req.body;
 
     const book = await Book.findById(req.params.id);
@@ -260,6 +263,7 @@ const updateBook = async (req, res) => {
       book.amazonLink = amazonLink !== undefined ? amazonLink : book.amazonLink;
       book.flipkartLink = flipkartLink !== undefined ? flipkartLink : book.flipkartLink;
       book.pothiLink = pothiLink !== undefined ? pothiLink : book.pothiLink;
+      book.trailerUrl = trailerUrl !== undefined ? trailerUrl : book.trailerUrl;
 
       // Update summaries
       const nextSummaryEn = summaryEn || (description ? description : book.summaryEn);
@@ -485,14 +489,14 @@ const proxyPdf = async (req, res) => {
 // @route   GET /api/books/announcement
 const getAnnouncementBook = async (req, res) => {
   try {
-    const book = await Book.findOne({
+    const books = await Book.find({
       isAnnounced: true,
       launchDate: { $gt: new Date() }
     })
     .sort({ launchDate: 1 })
     .populate('category', 'name slug');
 
-    res.json(book);
+    res.json(books);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

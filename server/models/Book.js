@@ -71,6 +71,7 @@ const bookSchema = new mongoose.Schema(
     isPublished: { type: Boolean, default: false },
     isAnnounced: { type: Boolean, default: false },
     launchDate: { type: Date },
+    trailerUrl: { type: String },
   },
   { timestamps: true }
 );

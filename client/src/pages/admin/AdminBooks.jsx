@@ -25,6 +25,7 @@ const AdminBooks = () => {
   const [launchHour, setLaunchHour] = useState('12');
   const [launchMinute, setLaunchMinute] = useState('00');
   const [launchAmpm, setLaunchAmpm] = useState('PM');
+  const [trailerUrl, setTrailerUrl] = useState('');
 
   // New metadata fields
   const [isbn, setIsbn] = useState('');
@@ -141,6 +142,7 @@ const AdminBooks = () => {
     setLaunchHour('12');
     setLaunchMinute('00');
     setLaunchAmpm('PM');
+    setTrailerUrl('');
     
     setIsModalOpen(true);
   };
@@ -156,6 +158,7 @@ const AdminBooks = () => {
     setImages(book.images || []);
     setIsPublished(book.isPublished);
     setIsAnnounced(book.isAnnounced || false);
+    setTrailerUrl(book.trailerUrl || '');
     if (book.launchDate) {
       const dateObj = new Date(book.launchDate);
       const year = dateObj.getFullYear();
@@ -290,6 +293,7 @@ const AdminBooks = () => {
       amazonLink,
       flipkartLink,
       pothiLink,
+      trailerUrl,
       formats: {
         ebook: {
           isAvailable: ebookAvailable,
@@ -692,6 +696,16 @@ const AdminBooks = () => {
                           <p className="text-[11px] text-slate-400">
                             The book will remain in draft mode until this time, and will automatically become available and public after it passes.
                           </p>
+                          <div className="pt-2">
+                            <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Teaser / Trailer Video URL (YouTube or direct MP4 link)</span>
+                            <input 
+                              type="url"
+                              value={trailerUrl}
+                              onChange={(e) => setTrailerUrl(e.target.value)}
+                              placeholder="https://www.youtube.com/watch?v=..."
+                              className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                            />
+                          </div>
                         </div>
                       )}
                       <div>

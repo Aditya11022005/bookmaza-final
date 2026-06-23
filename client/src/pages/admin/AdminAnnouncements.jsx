@@ -18,6 +18,7 @@ const AdminAnnouncements = () => {
   const [launchHour, setLaunchHour] = useState('12');
   const [launchMinute, setLaunchMinute] = useState('00');
   const [launchAmpm, setLaunchAmpm] = useState('PM');
+  const [trailerUrl, setTrailerUrl] = useState('');
   const [editingBook, setEditingBook] = useState(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,6 +94,7 @@ const AdminAnnouncements = () => {
     setLaunchHour('12');
     setLaunchMinute('00');
     setLaunchAmpm('PM');
+    setTrailerUrl('');
     setBookSearch('');
     setIsModalOpen(true);
   };
@@ -100,6 +102,7 @@ const AdminAnnouncements = () => {
   const openEditModal = (book) => {
     setEditingBook(book);
     setSelectedBookId(book._id);
+    setTrailerUrl(book.trailerUrl || '');
     if (book.launchDate) {
       const dateObj = new Date(book.launchDate);
       const year = dateObj.getFullYear();
@@ -155,7 +158,8 @@ const AdminAnnouncements = () => {
       await axios.put(`/books/${selectedBookId}`, {
         isAnnounced: true,
         launchDate: combinedDate.toISOString(),
-        isPublished: false
+        isPublished: false,
+        trailerUrl
       });
       
       toast.success(editingBook ? 'Announcement updated successfully!' : 'Launch announcement scheduled!', { id: toastId });
@@ -578,6 +582,16 @@ const AdminAnnouncements = () => {
                     <p className="text-[11px] text-slate-500 mt-1.5">
                       The book will remain in draft mode until this time, and will automatically become available and public after it passes.
                     </p>
+                    <div className="pt-2">
+                      <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Teaser / Trailer Video URL (YouTube or direct MP4 link)</span>
+                      <input 
+                        type="url"
+                        value={trailerUrl}
+                        onChange={(e) => setTrailerUrl(e.target.value)}
+                        placeholder="https://www.youtube.com/watch?v=..."
+                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
                   </div>
                 </div>
 
