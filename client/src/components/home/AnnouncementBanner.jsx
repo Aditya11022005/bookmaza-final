@@ -96,8 +96,8 @@ const AnnouncementBanner = () => {
   };
 
   return (
-    <div className="w-full bg-[#f8fafc] py-12 px-4 sm:px-8 lg:px-12">
-      <div className="max-w-[1400px] mx-auto bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] rounded-3xl border border-white/[0.08] shadow-2xl relative overflow-hidden p-6 sm:p-10 lg:p-12 group">
+    <div className="w-full bg-[#f8fafc] py-6 px-3 sm:py-12 sm:px-8 lg:px-12">
+      <div className="max-w-[1400px] mx-auto bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#0f172a] rounded-3xl border border-white/[0.08] shadow-2xl relative overflow-hidden p-4 sm:p-10 lg:p-12 group">
         {/* Glowing Decorative Spheres */}
         <div className="absolute top-[-100px] left-[-100px] w-96 h-96 rounded-full bg-primary-500/15 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 rounded-full bg-purple-500/15 blur-[120px] pointer-events-none" />
@@ -137,7 +137,7 @@ const AnnouncementBanner = () => {
                 Upcoming Exclusive Release
               </div>
               
-              <h2 className="text-2xl sm:text-3xl font-poppins font-black text-white leading-tight">
+              <h2 className="text-xl sm:text-3xl font-poppins font-black text-white leading-tight">
                 {currentBook.title}
               </h2>
               
@@ -171,25 +171,25 @@ const AnnouncementBanner = () => {
             </div>
             
             {/* Countdown Boxes */}
-            <div className="grid grid-cols-4 gap-3 max-w-xs sm:max-w-sm w-full">
-              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl p-2 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-[70px]">
+            <div className="grid grid-cols-4 gap-2 sm:gap-3 max-w-xs sm:max-w-sm w-full">
+              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl py-2.5 px-1 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-0 flex-1">
                 <span className="text-white text-lg sm:text-2xl md:text-3xl font-black font-poppins leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
-                <span className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider mt-1.5">Days</span>
+                <span className="text-slate-400 text-[7px] sm:text-[10px] font-bold uppercase tracking-wider mt-1">Days</span>
               </div>
               
-              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl p-2 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-[70px]">
+              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl py-2.5 px-1 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-0 flex-1">
                 <span className="text-white text-lg sm:text-2xl md:text-3xl font-black font-poppins leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider mt-1.5">Hours</span>
+                <span className="text-slate-400 text-[7px] sm:text-[10px] font-bold uppercase tracking-wider mt-1">Hours</span>
               </div>
               
-              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl p-2 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-[70px]">
+              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl py-2.5 px-1 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-0 flex-1">
                 <span className="text-white text-lg sm:text-2xl md:text-3xl font-black font-poppins leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider mt-1.5">Mins</span>
+                <span className="text-slate-400 text-[7px] sm:text-[10px] font-bold uppercase tracking-wider mt-1">Mins</span>
               </div>
               
-              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl p-2 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-[70px]">
+              <div className="flex flex-col items-center justify-center bg-white/[0.03] border border-white/[0.06] rounded-2xl py-2.5 px-1 sm:p-4 aspect-square shadow-lg backdrop-blur-md min-w-0 flex-1">
                 <span className="text-white text-lg sm:text-2xl md:text-3xl font-black font-poppins leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider mt-1.5">Secs</span>
+                <span className="text-slate-400 text-[7px] sm:text-[10px] font-bold uppercase tracking-wider mt-1">Secs</span>
               </div>
             </div>
             
@@ -206,13 +206,13 @@ const AnnouncementBanner = () => {
           <>
             <button 
               onClick={handlePrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:border-white/20 transition-all opacity-0 group-hover:opacity-100"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:border-white/20 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <ChevronLeft size={20} />
             </button>
             <button 
               onClick={handleNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:border-white/20 transition-all opacity-0 group-hover:opacity-100"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center border border-white/10 hover:border-white/20 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
             >
               <ChevronRight size={20} />
             </button>

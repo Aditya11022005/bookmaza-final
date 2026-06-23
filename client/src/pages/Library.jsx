@@ -18,52 +18,52 @@ const LibraryCard = ({ item, onClick }) => {
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className="bg-white rounded-[2rem] p-4 sm:p-5 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-gray-100 hover:shadow-[0_8px_30px_-10px_rgba(106,13,173,0.15)] transition-all duration-300 group flex flex-col h-full cursor-pointer"
+      className="bg-white rounded-2xl sm:rounded-[2rem] p-3 sm:p-5 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-gray-100 hover:shadow-[0_8px_30px_-10px_rgba(106,13,173,0.15)] transition-all duration-300 group flex flex-col h-full cursor-pointer"
       onClick={() => onClick(item.type, item.bookId)}
     >
-      <div className="relative w-full aspect-[2/3] rounded-[1.5rem] overflow-hidden mb-5 bg-gray-50 border border-gray-100/50 shadow-inner group-hover:shadow-md transition-shadow">
+      <div className="relative w-full aspect-[2/3] rounded-xl sm:rounded-[1.5rem] overflow-hidden mb-3 sm:mb-5 bg-gray-50 border border-gray-100/50 shadow-inner group-hover:shadow-md transition-shadow">
          <img src={getOptimizedImageUrl(item.coverImage, 300)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]" />
          
-         <div className="absolute top-3 left-3 px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-white/90 text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-white/20">
-            {item.type === 'read' ? <BookOpen size={12} className="text-blue-300"/> : <Headphones size={12} className="text-purple-300"/>}
+         <div className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-black/60 backdrop-blur-md text-white/90 text-[9px] sm:text-[11px] font-black uppercase tracking-widest flex items-center gap-1 sm:gap-1.5 border border-white/20">
+            {item.type === 'read' ? <BookOpen size={10} className="text-blue-300 sm:w-3 sm:h-3"/> : <Headphones size={10} className="text-purple-300 sm:w-3 sm:h-3"/>}
             {item.format}
          </div>
 
          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-            <div className="w-14 h-14 rounded-full bg-white text-primary-600 flex items-center justify-center shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300 ease-out">
-               <Play size={24} className={item.type === 'listen' ? 'ml-1' : ''} fill="currentColor"/>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white text-primary-600 flex items-center justify-center shadow-lg transform scale-50 group-hover:scale-100 transition-transform duration-300 ease-out">
+               <Play size={18} className={`sm:w-6 sm:h-6 ${item.type === 'listen' ? 'ml-0.5 sm:ml-1' : ''}`} fill="currentColor"/>
             </div>
          </div>
       </div>
 
       <div className="flex-1 flex flex-col">
-         <h3 className="font-poppins font-bold text-[#1e293b] text-xl leading-tight mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">{item.title}</h3>
-         <p className="text-[#64748b] text-sm font-medium mb-auto">by <span className="text-[#1e293b] font-bold">{item.author}</span></p>
+         <h3 className="font-poppins font-bold text-[#1e293b] text-sm sm:text-xl leading-tight mb-1 sm:mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">{item.title}</h3>
+         <p className="text-[#64748b] text-[10px] sm:text-sm font-medium mb-auto">by <span className="text-[#1e293b] font-bold">{item.author}</span></p>
 
-         <div className="mt-6 pt-5 border-t border-gray-50 space-y-3">
-            <div className="flex items-center justify-between text-xs font-bold font-inter">
+         <div className="mt-4 sm:mt-6 pt-3 sm:pt-5 border-t border-gray-50 space-y-2.5 sm:space-y-3">
+            <div className="flex items-center justify-between text-[9px] sm:text-xs font-bold font-inter">
                {isCompleted ? (
-                  <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100/50 uppercase tracking-wider"><CheckCircle2 size={12} /> Completed</span>
+                  <span className="flex items-center gap-1 sm:gap-1.5 text-emerald-600 bg-emerald-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded sm:rounded-lg border border-emerald-100/50 uppercase tracking-wider"><CheckCircle2 size={10} className="sm:w-3 sm:h-3" /> Completed</span>
                ) : isStarted ? (
-                  <span className="flex items-center gap-1.5 text-primary-600 uppercase tracking-wider bg-primary-50 px-2 py-1 rounded-lg border border-primary-100/50"><Clock size={12} /> {item.progress}% Finished</span>
+                  <span className="flex items-center gap-1 sm:gap-1.5 text-primary-600 uppercase tracking-wider bg-primary-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded sm:rounded-lg border border-primary-100/50"><Clock size={10} className="sm:w-3 sm:h-3" /> {item.progress}%</span>
                ) : (
-                  <span className="flex items-center gap-1.5 text-gray-500 uppercase tracking-wider bg-gray-50 px-2 py-1 rounded-lg border border-gray-100"><Icon size={12} /> Not Started</span>
+                  <span className="flex items-center gap-1 sm:gap-1.5 text-gray-500 uppercase tracking-wider bg-gray-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded sm:rounded-lg border border-gray-100"><Icon size={10} className="sm:w-3 sm:h-3" /> New</span>
                )}
             </div>
             
             {!isCompleted && item.progress > 0 && (
-               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+               <div className="w-full h-1 sm:h-2 bg-gray-100 rounded-full overflow-hidden">
                   <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: `${item.progress}%` }}
                      transition={{ duration: 1, ease: 'easeOut' }}
-                     className={`h-full rounded-full ${item.type === 'read' ? 'bg-blue-500' : 'bg-purple-500'}`}
+                     className="h-full rounded-full bg-primary-500"
                   ></motion.div>
                </div>
             )}
 
-            <button className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${isCompleted ? 'bg-gray-50 text-[#1e293b] border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-100' : 'bg-primary-600 text-white shadow-[0_4px_14px_0_rgba(106,13,173,0.39)] hover:shadow-[0_6px_20px_rgba(106,13,173,0.23)] hover:bg-primary-700'}`}>
-               <Icon size={18} /> {actionText}
+            <button className={`w-full py-2 sm:py-3.5 rounded-lg sm:rounded-xl font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition-all active:scale-[0.98] text-[10px] sm:text-sm ${isCompleted ? 'bg-gray-50 text-[#1e293b] border border-gray-100 hover:border-gray-200 hover:bg-gray-100' : 'bg-primary-600 text-white shadow-[0_4px_14px_0_rgba(106,13,173,0.25)] hover:shadow-[0_6px_20px_rgba(106,13,173,0.23)] hover:bg-primary-700'}`}>
+               <Icon size={12} className="sm:w-4 sm:h-4" /> <span className="truncate">{actionText}</span>
             </button>
          </div>
       </div>
@@ -225,7 +225,7 @@ const Library = () => {
                   <h2 className="text-xl font-poppins font-black text-[#1e293b] mb-6 flex items-center gap-2 uppercase tracking-wide">
                      <span className="w-2.5 h-2.5 rounded-full bg-primary-500"></span> Jump Back In
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
                      {activeBooks.map((item, idx) => (
                         <motion.div
                           key={item.id}
@@ -245,7 +245,7 @@ const Library = () => {
                   <h2 className="text-xl font-poppins font-black text-[#1e293b] mb-6 flex items-center gap-2 uppercase tracking-wide">
                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Up Next
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
                      {newBooks.map((item, idx) => (
                         <motion.div
                           key={item.id}
@@ -265,7 +265,7 @@ const Library = () => {
                   <h2 className="text-xl font-poppins font-black text-[#1e293b] mb-6 flex items-center gap-2 uppercase tracking-wide">
                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Finished Books
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
                      {finishedBooks.map((item, idx) => (
                         <motion.div
                           key={item.id}
