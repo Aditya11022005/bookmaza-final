@@ -20,7 +20,12 @@ import {
   ChevronRight,
   Sparkles,
   Maximize,
-  Minimize
+  Minimize,
+  Search,
+  Trash2,
+  Plus,
+  X,
+  PanelRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -72,6 +77,18 @@ const EbookReader = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [savingSync, setSavingSync] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Advanced Features State
+  const [bookmarks, setBookmarks] = useState([]);
+  const [highlights, setHighlights] = useState([]);
+  const [bookTextContent, setBookTextContent] = useState({});
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarTab, setSidebarTab] = useState('bookmarks'); // 'bookmarks' | 'search' | 'notes'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [selectionMenuVisible, setSelectionMenuVisible] = useState(false);
+  const [selectionMenuCoords, setSelectionMenuCoords] = useState({ x: 0, y: 0 });
+  const [selectedText, setSelectedText] = useState('');
 
   // Gesture refs
   const touchStartX = useRef(0);
@@ -174,8 +191,16 @@ const EbookReader = () => {
 
         // Fetch user progress
         const { data: progressData } = await axios.get(`/progress/${id}/ebook`);
-        if (progressData && progressData.position > 1) {
-          setPageNumber(progressData.position);
+        if (progressData) {
+          if (progressData.position > 1) {
+            setPageNumber(progressData.position);
+          }
+          if (progressData.bookmarks) {
+            setBookmarks(progressData.bookmarks);
+          }
+          if (progressData.highlights) {
+            setHighlights(progressData.highlights);
+          }
         }
         setLoading(false);
       } catch (error) {
@@ -187,25 +212,278 @@ const EbookReader = () => {
     fetchBookAndProgress();
   }, [id, navigate]);
 
-  const saveProgress = useCallback(async (currentPage, totalPages) => {
+  const saveProgress = useCallback(async (currentPage, totalPages, updatedBookmarks, updatedHighlights) => {
     setSavingSync(true);
     try {
       await axios.post('/progress', {
         bookId: id,
         format: 'ebook',
         position: currentPage,
-        percentage: totalPages ? Math.round((currentPage / totalPages) * 100) : 0
+        percentage: totalPages ? Math.round((currentPage / totalPages) * 100) : 0,
+        bookmarks: updatedBookmarks !== undefined ? updatedBookmarks : bookmarks,
+        highlights: updatedHighlights !== undefined ? updatedHighlights : highlights
       });
     } catch (err) {
       console.error('Failed to sync progress', err);
     }
     setSavingSync(false);
-  }, [id]);
+  }, [id, bookmarks, highlights]);
 
-  const onDocumentLoadSuccess = ({ numPages }) => {
-    setNumPages(numPages);
+  const onDocumentLoadSuccess = async (pdf) => {
+    setNumPages(pdf.numPages);
+    
+    // Background text extraction for global search
+    try {
+      const extractedText = {};
+      for (let i = 1; i <= pdf.numPages; i++) {
+        // Yield to main thread every 5 pages to keep UI responsive
+        if (i % 5 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 30));
+        }
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const textItems = textContent.items.map(item => item.str).join(' ');
+        extractedText[i] = textItems;
+      }
+      setBookTextContent(extractedText);
+    } catch (err) {
+      console.error('Failed to extract text for search', err);
+    }
+  };
+  const applyPageHighlightsAndSearch = useCallback(() => {
+    // Wait a brief moment for the DOM to be fully updated
+    setTimeout(() => {
+      const textLayer = document.querySelector(`.react-pdf__Page[data-page-number="${pageNumber}"] .react-pdf__Page__textContent`);
+      if (!textLayer) return;
+
+      const spans = textLayer.querySelectorAll('span');
+      
+      // Clear any previous custom highlight markers we added
+      spans.forEach(span => {
+        if (span.dataset.originalText) {
+          span.innerHTML = span.dataset.originalText;
+        } else {
+          span.dataset.originalText = span.innerHTML;
+        }
+      });
+
+      // Get page highlights and search query
+      const pageHighlights = highlights.filter(h => h.page === pageNumber);
+      const activeSearch = searchQuery.trim().toLowerCase();
+
+      spans.forEach(span => {
+        let html = span.innerHTML;
+        let modified = false;
+
+        // Apply page highlights
+        pageHighlights.forEach(h => {
+          const textToHighlight = h.text;
+          const escapedText = textToHighlight.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedText})`, 'gi');
+          
+          if (regex.test(html)) {
+            let colorClass = 'bg-yellow-250/50 dark:bg-yellow-500/30 text-inherit';
+            if (h.color === 'green') colorClass = 'bg-green-200/50 dark:bg-green-500/30 text-inherit';
+            if (h.color === 'blue') colorClass = 'bg-blue-200/50 dark:bg-blue-500/30 text-inherit';
+
+            html = html.replace(regex, `<mark class="${colorClass} rounded px-0.5 cursor-pointer hover:opacity-85" data-highlight-id="${new Date(h.createdAt).getTime()}">${textToHighlight}</mark>`);
+            modified = true;
+          }
+        });
+
+        // Apply active search query highlighting
+        if (activeSearch && activeSearch.length >= 2) {
+          const escapedSearch = activeSearch.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`(${escapedSearch})`, 'gi');
+          if (regex.test(html)) {
+            html = html.replace(regex, `<mark class="bg-orange-300/60 dark:bg-orange-500/40 text-inherit rounded px-0.5 font-bold shadow-sm">$1</mark>`);
+            modified = true;
+          }
+        }
+
+        if (modified) {
+          span.innerHTML = html;
+        }
+      });
+    }, 100);
+  }, [pageNumber, highlights, searchQuery]);
+
+  // Run highlight applicator on pageNumber or highlights/searchQuery changes
+  useEffect(() => {
+    applyPageHighlightsAndSearch();
+  }, [pageNumber, highlights, searchQuery, applyPageHighlightsAndSearch]);
+
+  const handleTextSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed) {
+      setSelectionMenuVisible(false);
+      return;
+    }
+    
+    const text = selection.toString().trim();
+    if (text.length < 2) {
+      setSelectionMenuVisible(false);
+      return;
+    }
+    
+    const container = document.getElementById('pdf-container');
+    if (container && container.contains(selection.anchorNode)) {
+      setSelectedText(text);
+      
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectionMenuCoords({
+        x: rect.left + rect.width / 2,
+        y: rect.top - 55
+      });
+      setSelectionMenuVisible(true);
+    } else {
+      setSelectionMenuVisible(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleDocumentSelectionChange = () => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) {
+        setSelectionMenuVisible(false);
+      }
+    };
+    document.addEventListener('selectionchange', handleDocumentSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', handleDocumentSelectionChange);
+    };
+  }, []);
+
+  const addHighlight = async (color) => {
+    if (!selectedText) return;
+    
+    const newHighlight = {
+      page: pageNumber,
+      text: selectedText,
+      color,
+      note: '',
+      createdAt: new Date()
+    };
+    
+    const updated = [...highlights, newHighlight];
+    setHighlights(updated);
+    setSelectionMenuVisible(false);
+    window.getSelection()?.removeAllRanges();
+    
+    await saveProgress(pageNumber, numPages, bookmarks, updated);
+    toast.success('Text highlighted!');
   };
 
+  const addHighlightWithNote = async () => {
+    if (!selectedText) return;
+    
+    const noteText = prompt('Enter a note for this highlight:');
+    if (noteText === null) return;
+    
+    const newHighlight = {
+      page: pageNumber,
+      text: selectedText,
+      color: 'yellow',
+      note: noteText,
+      createdAt: new Date()
+    };
+    
+    const updated = [...highlights, newHighlight];
+    setHighlights(updated);
+    setSelectionMenuVisible(false);
+    window.getSelection()?.removeAllRanges();
+    
+    await saveProgress(pageNumber, numPages, bookmarks, updated);
+    toast.success('Note added!');
+  };
+
+  const deleteHighlight = async (highlightToDelete) => {
+    const updated = highlights.filter(h => h !== highlightToDelete);
+    setHighlights(updated);
+    await saveProgress(pageNumber, numPages, bookmarks, updated);
+    toast.success('Highlight removed');
+  };
+
+  const handleHighlightClick = (e) => {
+    const mark = e.target.closest('mark[data-highlight-id]');
+    if (!mark) {
+      handleDoubleTap(e);
+      return;
+    }
+    
+    const highlightId = mark.dataset.highlightId;
+    const highlight = highlights.find(h => new Date(h.createdAt).getTime().toString() === highlightId);
+    if (!highlight) return;
+    
+    if (highlight.note) {
+      toast(highlight.note, {
+        description: `Highlight Note (Page ${highlight.page})`,
+        action: {
+          label: 'Delete',
+          onClick: () => deleteHighlight(highlight)
+        }
+      });
+    } else {
+      toast('Highlight Options', {
+        description: `Text: "${highlight.text.slice(0, 30)}..."`,
+        action: {
+          label: 'Delete Highlight',
+          onClick: () => deleteHighlight(highlight)
+        }
+      });
+    }
+  };
+
+  const toggleBookmark = async () => {
+    const isBookmarked = bookmarks.some(b => b.page === pageNumber);
+    let updated;
+    if (isBookmarked) {
+      updated = bookmarks.filter(b => b.page !== pageNumber);
+      setBookmarks(updated);
+      toast.success('Bookmark removed');
+    } else {
+      const label = prompt('Enter a label for this bookmark (optional):') || `Page ${pageNumber}`;
+      if (label === null) return;
+      updated = [...bookmarks, { page: pageNumber, label, createdAt: new Date() }];
+      setBookmarks(updated);
+      toast.success('Bookmark added');
+    }
+    await saveProgress(pageNumber, numPages, updated, highlights);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (!query || query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    
+    const results = [];
+    const lowerQuery = query.toLowerCase();
+    
+    Object.entries(bookTextContent).forEach(([pageStr, text]) => {
+      const pageNum = parseInt(pageStr);
+      const lowerText = text.toLowerCase();
+      
+      if (lowerText.includes(lowerQuery)) {
+        const index = lowerText.indexOf(lowerQuery);
+        const start = Math.max(0, index - 40);
+        const end = Math.min(text.length, index + lowerQuery.length + 60);
+        let snippet = text.slice(start, end);
+        if (start > 0) snippet = '...' + snippet;
+        if (end < text.length) snippet = snippet + '...';
+        
+        results.push({
+          page: pageNum,
+          snippet
+        });
+      }
+    });
+    
+    setSearchResults(results);
+  };
   const changePage = (offset) => {
     const newPage = pageNumber + offset;
     if (newPage >= 1 && (numPages === null || newPage <= numPages)) {
@@ -356,6 +634,36 @@ const EbookReader = () => {
               <span className="hidden sm:inline">Fullscreen</span>
               <span className="sm:hidden">Full</span>
             </button>
+
+            {selectedFormat === 'pdf' && (
+              <>
+                <button 
+                  onClick={toggleBookmark} 
+                  className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${
+                    bookmarks.some(b => b.page === pageNumber)
+                      ? 'bg-yellow-600/15 border-yellow-500/30 text-yellow-500 hover:bg-yellow-600/20' 
+                      : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                  }`}
+                  title="Bookmark current page"
+                >
+                  <Bookmark size={16} className={bookmarks.some(b => b.page === pageNumber) ? 'fill-yellow-500 text-yellow-500' : ''} />
+                  <span className="hidden sm:inline">Bookmark</span>
+                </button>
+
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)} 
+                  className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${
+                    sidebarOpen
+                      ? 'bg-primary-600 border-primary-500 text-white' 
+                      : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'
+                  }`}
+                  title="Open Notes, Bookmarks & Search"
+                >
+                  <PanelRight size={16} />
+                  <span className="hidden sm:inline">Shelf</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Center Toolbar Part: Format Tabs Selector */}
@@ -446,8 +754,12 @@ const EbookReader = () => {
         className="w-full max-w-5xl mt-4 flex justify-center relative group overflow-x-auto scrollbar-thin py-2 px-1"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleDoubleTap}
+        onTouchEnd={(e) => {
+          handleTouchEnd(e);
+          handleTextSelection(e);
+        }}
+        onMouseUp={handleTextSelection}
+        onClick={handleHighlightClick}
       >
         
         {/* Floating Page Flip Arrows (Desktop only) */}
@@ -527,9 +839,10 @@ const EbookReader = () => {
                     pageNumber={pageNumber} 
                     width={containerWidth}
                     scale={scale} 
-                    renderTextLayer={false} 
+                    renderTextLayer={true} 
                     renderAnnotationLayer={false} 
                     devicePixelRatio={Math.min(3, window.devicePixelRatio || 1)}
+                    onRenderSuccess={applyPageHighlightsAndSearch}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -670,8 +983,30 @@ const EbookReader = () => {
               </button>
             </div>
 
-            {/* Actions: Theme Toggle, Book Mode, Fullscreen Exit */}
+            {/* Actions: Bookmark, Shelf, Theme Toggle, Book Mode, Fullscreen Exit */}
             <div className="flex items-center gap-1.5">
+              <button 
+                onClick={toggleBookmark}
+                className={`p-2 rounded-xl border transition-all ${
+                  bookmarks.some(b => b.page === pageNumber)
+                    ? 'bg-yellow-600/15 border-yellow-500/30 text-yellow-500 hover:bg-yellow-600/20' 
+                    : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                }`}
+                title="Bookmark Page"
+              >
+                <Bookmark size={16} className={bookmarks.some(b => b.page === pageNumber) ? 'fill-yellow-500 text-yellow-500' : ''} />
+              </button>
+              <button 
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className={`p-2 rounded-xl border transition-all ${
+                  sidebarOpen
+                    ? 'bg-primary-600 border-primary-500 text-white' 
+                    : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                }`}
+                title="Open Notes, Search, Bookmarks"
+              >
+                <PanelRight size={16} />
+              </button>
               <button 
                 onClick={() => setDarkMode(!darkMode)} 
                 className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'}`}
@@ -694,6 +1029,278 @@ const EbookReader = () => {
                 <Minimize size={16} />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Floating Selection Highlighter Menu */}
+      {selectionMenuVisible && (
+        <div 
+          className="fixed z-[10001] -translate-x-1/2 bg-slate-900/95 backdrop-blur-sm text-white px-3 py-1.5 rounded-full shadow-2xl flex items-center gap-2 border border-white/10"
+          style={{ 
+            left: selectionMenuCoords.x, 
+            top: selectionMenuCoords.y 
+          }}
+          onMouseDown={e => e.preventDefault()}
+        >
+          <button 
+            onClick={() => addHighlight('yellow')} 
+            className="w-5 h-5 rounded-full bg-yellow-400 hover:scale-110 active:scale-95 transition-transform" 
+            title="Highlight Yellow"
+          />
+          <button 
+            onClick={() => addHighlight('green')} 
+            className="w-5 h-5 rounded-full bg-green-400 hover:scale-110 active:scale-95 transition-transform" 
+            title="Highlight Green"
+          />
+          <button 
+            onClick={() => addHighlight('blue')} 
+            className="w-5 h-5 rounded-full bg-blue-400 hover:scale-110 active:scale-95 transition-transform" 
+            title="Highlight Blue"
+          />
+          <div className="w-[1px] h-4 bg-white/20 mx-1" />
+          <button 
+            onClick={addHighlightWithNote} 
+            className="text-[10px] uppercase font-black tracking-wider hover:text-primary-300 transition-colors flex items-center gap-1"
+          >
+            <Plus size={12} /> Note
+          </button>
+        </div>
+      )}
+
+      {/* Sliding Sidebar Drawer for Search, Bookmarks, and Highlights */}
+      {sidebarOpen && (
+        <div 
+          className={`fixed inset-y-0 right-0 z-[10002] w-80 md:w-96 shadow-2xl border-l flex flex-col transition-all duration-300 ${
+            darkMode 
+              ? 'bg-[#0f172a] text-slate-100 border-white/10' 
+              : 'bg-white text-slate-800 border-slate-200'
+          }`}
+        >
+          {/* Header */}
+          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <span className="font-poppins font-black text-sm uppercase tracking-wider flex items-center gap-2">
+              <PanelRight size={18} className="text-primary-500" /> Reader Shelf
+            </span>
+            <button 
+              onClick={() => setSidebarOpen(false)} 
+              className={`p-1.5 rounded-lg border transition-colors ${
+                darkMode ? 'hover:bg-white/5 border-white/10' : 'hover:bg-slate-100 border-slate-200'
+              }`}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Tab Selector */}
+          <div className="flex border-b border-white/10 p-1 bg-slate-500/5">
+            <button 
+              onClick={() => setSidebarTab('bookmarks')}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                sidebarTab === 'bookmarks' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Bookmarks
+            </button>
+            <button 
+              onClick={() => setSidebarTab('search')}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                sidebarTab === 'search' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Search
+            </button>
+            <button 
+              onClick={() => setSidebarTab('notes')}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                sidebarTab === 'notes' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Notes
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
+            
+            {/* Bookmarks Tab */}
+            {sidebarTab === 'bookmarks' && (
+              <div className="flex flex-col gap-2">
+                {bookmarks.length === 0 ? (
+                  <p className="text-xs text-center text-slate-500 py-10 font-bold">No bookmarks set. Click the bookmark button in the toolbar to add this page.</p>
+                ) : (
+                  bookmarks.map((b, i) => (
+                    <div 
+                      key={i} 
+                      className={`p-3 rounded-2xl border flex items-center justify-between gap-3 hover:scale-[1.01] transition-transform cursor-pointer ${
+                        darkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                      }`}
+                      onClick={() => {
+                        setPageNumber(b.page);
+                        saveProgress(b.page, numPages);
+                      }}
+                    >
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold truncate">{b.label}</span>
+                        <span className="text-[10px] opacity-60 font-mono">Page {b.page}</span>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const updated = bookmarks.filter((_, idx) => idx !== i);
+                          setBookmarks(updated);
+                          saveProgress(pageNumber, numPages, updated, highlights);
+                          toast.success('Bookmark deleted');
+                        }}
+                        className="text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* Search Tab */}
+            {sidebarTab === 'search' && (
+              <div className="flex flex-col gap-4">
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    placeholder="Search inside book..." 
+                    className={`w-full pl-9 pr-4 py-2.5 rounded-2xl border text-xs focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                      darkMode 
+                        ? 'bg-white/5 border-white/10 text-white placeholder-slate-500' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                    }`}
+                  />
+                  <Search size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => handleSearch('')}
+                      className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {searchQuery.trim().length >= 2 && searchResults.length === 0 ? (
+                    <p className="text-xs text-center text-slate-500 py-10 font-bold">No matches found for "{searchQuery}".</p>
+                  ) : searchQuery.trim().length < 2 ? (
+                    <p className="text-xs text-center text-slate-500 py-10">Type at least 2 characters to search the book text.</p>
+                  ) : (
+                    searchResults.map((r, i) => (
+                      <div 
+                        key={i}
+                        className={`p-3 rounded-2xl border flex flex-col gap-1 cursor-pointer transition-transform hover:scale-[1.01] ${
+                          darkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                        }`}
+                        onClick={() => {
+                          setPageNumber(r.page);
+                          saveProgress(r.page, numPages);
+                        }}
+                      >
+                        <span className="text-[10px] font-black text-primary-400 uppercase tracking-widest">Page {r.page}</span>
+                        <p className="text-xs italic leading-relaxed opacity-80" dangerouslySetInnerHTML={{ 
+                          __html: r.snippet.replace(new RegExp(`(${searchQuery})`, 'gi'), '<mark class="bg-orange-300/60 dark:bg-orange-500/40 text-inherit font-bold rounded px-0.5">$1</mark>') 
+                        }} />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Notes/Highlights Tab */}
+            {sidebarTab === 'notes' && (
+              <div className="flex flex-col gap-2">
+                {highlights.length === 0 ? (
+                  <p className="text-xs text-center text-slate-500 py-10 font-bold">No highlights or notes. Select text in the eBook reader to highlight and write notes.</p>
+                ) : (
+                  highlights.map((h, i) => (
+                    <div 
+                      key={i}
+                      className={`p-3 rounded-2xl border flex flex-col gap-2 hover:scale-[1.01] transition-transform cursor-pointer ${
+                        darkMode ? 'bg-white/5 border-white/5 hover:bg-white/10' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                      }`}
+                      onClick={() => {
+                        setPageNumber(h.page);
+                        saveProgress(h.page, numPages);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono opacity-60">Page {h.page}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-3.5 h-3.5 rounded-full ${
+                            h.color === 'green' ? 'bg-green-400' : h.color === 'blue' ? 'bg-blue-400' : 'bg-yellow-400'
+                          }`} />
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteHighlight(h);
+                            }}
+                            className="text-red-500 hover:bg-red-500/10 p-1.5 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="text-xs italic border-l-2 border-slate-400/30 pl-2 opacity-80 truncate">{h.text}</p>
+                      
+                      {h.note ? (
+                        <div className="flex flex-col gap-0.5 bg-black/10 dark:bg-white/5 p-2 rounded-xl border border-white/5">
+                          <span className="text-[9px] uppercase font-black tracking-wider text-slate-400">Note</span>
+                          <p className="text-xs opacity-90">{h.note}</p>
+                          <button 
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              const newNoteText = prompt('Edit note:', h.note);
+                              if (newNoteText === null) return;
+                              
+                              const updated = highlights.map((item, idx) => idx === i ? { ...item, note: newNoteText } : item);
+                              setHighlights(updated);
+                              await saveProgress(pageNumber, numPages, bookmarks, updated);
+                              toast.success('Note updated');
+                            }}
+                            className="text-[9px] font-bold text-primary-400 hover:underline mt-1 self-start"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            const noteText = prompt('Enter a note for this highlight:');
+                            if (noteText === null) return;
+                            
+                            const updated = highlights.map((item, idx) => idx === i ? { ...item, note: noteText } : item);
+                            setHighlights(updated);
+                            await saveProgress(pageNumber, numPages, bookmarks, updated);
+                            toast.success('Note added');
+                          }}
+                          className="text-[10px] font-black uppercase text-primary-500 hover:underline self-start flex items-center gap-1 mt-1"
+                        >
+                          <Plus size={10} /> Add Note
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
           </div>
         </div>
       )}

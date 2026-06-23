@@ -27,7 +27,7 @@ const getProgress = async (req, res) => {
 // @route   POST /api/progress
 const updateProgress = async (req, res) => {
   try {
-    const { bookId, format, position, percentage } = req.body;
+    const { bookId, format, position, percentage, bookmarks, highlights } = req.body;
 
     let progress = await Progress.findOne({
       user: req.user._id,
@@ -36,8 +36,10 @@ const updateProgress = async (req, res) => {
     });
 
     if (progress) {
-      progress.position = position;
-      progress.percentage = percentage;
+      if (position !== undefined) progress.position = position;
+      if (percentage !== undefined) progress.percentage = percentage;
+      if (bookmarks !== undefined) progress.bookmarks = bookmarks;
+      if (highlights !== undefined) progress.highlights = highlights;
       progress.lastAccessed = Date.now();
       await progress.save();
     } else {
@@ -45,8 +47,10 @@ const updateProgress = async (req, res) => {
         user: req.user._id,
         book: bookId,
         format,
-        position,
-        percentage,
+        position: position || 0,
+        percentage: percentage || 0,
+        bookmarks: bookmarks || [],
+        highlights: highlights || [],
       });
     }
 
