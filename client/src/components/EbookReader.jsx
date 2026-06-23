@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -18,7 +18,9 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { toast } from 'sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -69,6 +71,49 @@ const EbookReader = () => {
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [savingSync, setSavingSync] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Gesture refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const lastTap = useRef(0);
+
+  // Fullscreen support
+  const toggleFullscreen = () => {
+    const readerElement = document.getElementById('ebook-reader-root');
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (readerElement) {
+        if (readerElement.requestFullscreen) {
+          readerElement.requestFullscreen().catch(err => console.error(err));
+        } else if (readerElement.webkitRequestFullscreen) {
+          readerElement.webkitRequestFullscreen();
+        }
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.error(err));
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(
+        !!document.fullscreenElement || 
+        !!document.webkitFullscreenElement
+      );
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
 
   useEffect(() => {
     const updateWidth = () => {
@@ -89,7 +134,7 @@ const EbookReader = () => {
       window.removeEventListener('resize', updateWidth);
       clearTimeout(timer);
     };
-  }, [selectedFormat, loading]);
+  }, [selectedFormat, loading, isFullscreen, bookMode]);
 
   useEffect(() => {
     const fetchBookAndProgress = async () => {
@@ -170,6 +215,35 @@ const EbookReader = () => {
     }
   };
 
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (scale <= 1.15) {
+      if (diff > 60) {
+        changePage(1);
+      } else if (diff < -60) {
+        changePage(-1);
+      }
+    }
+  };
+
+  const handleDoubleTap = (e) => {
+    const now = Date.now();
+    const DOUBLE_PRESS_DELAY = 300;
+    if (now - lastTap.current < DOUBLE_PRESS_DELAY) {
+      setScale(s => s > 1.15 ? 1.0 : 1.6);
+    }
+    lastTap.current = now;
+  };
+
   const flipVariants = {
     initial: (dir) => ({
       rotateY: dir > 0 ? 35 : -35,
@@ -205,10 +279,27 @@ const EbookReader = () => {
   if (!pdfUrl && !epubUrl && !docxUrl) return <div className="text-center py-20 text-red-500 font-poppins font-bold">No digital format files available for this book.</div>;
 
   return (
-    <div className={`min-h-screen flex flex-col items-center py-4 md:py-8 px-4 transition-colors duration-300 ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}`}>
+    <div 
+      id="ebook-reader-root" 
+      className={`transition-colors duration-300 flex flex-col items-center ${
+        isFullscreen 
+          ? `fixed inset-0 z-[9999] w-screen h-screen overflow-y-auto px-2 py-3 ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}` 
+          : `min-h-screen py-4 md:py-8 px-4 w-full ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}`
+      }`}
+    >
+      {/* Immersive Fullscreen Header (Compact and subtle) */}
+      {isFullscreen && book && (
+        <div className="flex items-center justify-between w-full max-w-5xl px-4 py-2 mb-2 border-b border-slate-700/20 text-slate-400 text-xs">
+          <span className="font-poppins font-bold truncate max-w-[50%]">{book.title}</span>
+          <span className="flex items-center gap-1.5 opacity-80">
+            <Sparkles size={12} className="text-primary-400 animate-pulse" />
+            <span>Double-tap to Zoom • Swipe to Turn</span>
+          </span>
+        </div>
+      )}
       
       {/* Premium Book Metadata Header */}
-      {book && (
+      {book && !isFullscreen && (
         <div className="text-center mb-6 max-w-2xl px-4">
           <h1 className={`text-2xl md:text-3xl font-black font-poppins tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {book.title}
@@ -225,98 +316,109 @@ const EbookReader = () => {
       )}
 
       {/* Top Toolbar */}
-      <div className={`p-4 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/80 text-slate-200 border-white/10 shadow-black/30' : 'bg-white/80 text-slate-800 border-slate-200/80'}`}>
-        
-        {/* Left Toolbar Part: Return & DarkMode */}
-        <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
-          <button 
-            onClick={() => navigate('/library')} 
-            className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
-          >
-            <ChevronLeft size={16} /> <span className="hidden sm:inline">Library</span><span className="sm:hidden">Lib</span>
-          </button>
+      {!isFullscreen && (
+        <div className={`p-4 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-4 w-full max-w-5xl justify-between border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/80 text-slate-200 border-white/10 shadow-black/30' : 'bg-white/80 text-slate-800 border-slate-200/80'}`}>
           
-          <button 
-            onClick={() => setDarkMode(!darkMode)} 
-            className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
-          >
-            {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />} 
-            <span className="hidden sm:inline">{darkMode ? 'Light Theme' : 'Dark Theme'}</span>
-            <span className="sm:hidden">{darkMode ? 'Light' : 'Dark'}</span>
-          </button>
+          {/* Left Toolbar Part: Return & DarkMode */}
+          <div className="flex flex-wrap items-center justify-center gap-3 w-full md:w-auto">
+            <button 
+              onClick={() => navigate('/library')} 
+              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+            >
+              <ChevronLeft size={16} /> <span className="hidden sm:inline">Library</span><span className="sm:hidden">Lib</span>
+            </button>
+            
+            <button 
+              onClick={() => setDarkMode(!darkMode)} 
+              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+            >
+              {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />} 
+              <span className="hidden sm:inline">{darkMode ? 'Light Theme' : 'Dark Theme'}</span>
+              <span className="sm:hidden">{darkMode ? 'Light' : 'Dark'}</span>
+            </button>
 
-          {selectedFormat === 'pdf' && (
-            <button 
-              onClick={() => setBookMode(!bookMode)} 
-              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
-            >
-              <Sparkles size={16} className={bookMode ? 'text-primary-450 animate-pulse' : 'text-slate-400'} />
-              <span className="hidden sm:inline">{bookMode ? '📖 3D Book Mode' : '📄 Flat PDF Mode'}</span>
-              <span className="sm:hidden">{bookMode ? '📖 3D' : '📄 Flat'}</span>
-            </button>
-          )}
-        </div>
-
-        {/* Center Toolbar Part: Format Tabs Selector */}
-        <div className="flex bg-slate-500/10 p-1.5 rounded-2xl border border-white/5">
-          {pdfUrl && (
-            <button 
-              onClick={() => setSelectedFormat('pdf')} 
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'pdf' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              PDF View
-            </button>
-          )}
-          {epubUrl && (
-            <button 
-              onClick={() => setSelectedFormat('epub')} 
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'epub' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              EPUB format
-            </button>
-          )}
-          {docxUrl && (
-            <button 
-              onClick={() => setSelectedFormat('docx')} 
-              className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'docx' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              Word (DOCX)
-            </button>
-          )}
-        </div>
-
-        {/* Right Toolbar Part: Zoom (PDF only) & Save Indicator */}
-        <div className="flex items-center gap-4">
-          {selectedFormat === 'pdf' && (
-            <div className="flex items-center gap-2 border-r border-slate-600/20 pr-4">
+            {selectedFormat === 'pdf' && (
               <button 
-                onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
-                className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
+                onClick={() => setBookMode(!bookMode)} 
+                className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
               >
-                <ZoomOut size={16}/>
+                <Sparkles size={16} className={bookMode ? 'text-primary-450 animate-pulse' : 'text-slate-400'} />
+                <span className="hidden sm:inline">{bookMode ? '📖 3D Book Mode' : '📄 Flat PDF Mode'}</span>
+                <span className="sm:hidden">{bookMode ? '📖 3D' : '📄 Flat'}</span>
               </button>
-              <span className="font-mono text-xs font-bold">{Math.round(scale * 100)}%</span>
-              <button 
-                onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
-                className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
-              >
-                <ZoomIn size={16}/>
-              </button>
-            </div>
-          )}
+            )}
 
-          <div className="text-xs font-black uppercase tracking-wider">
-            {savingSync ? (
-              <span className="animate-pulse flex items-center gap-1.5 text-primary-500"><Save size={14}/> Syncing</span>
-            ) : (
-              <span className="flex items-center gap-1.5 text-green-500"><Bookmark size={14}/> Auto Saved</span>
+            <button 
+              onClick={toggleFullscreen} 
+              className={`p-2.5 rounded-xl border flex items-center gap-1.5 text-xs font-black uppercase tracking-wider transition-all ${darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+            >
+              <Maximize size={16} /> 
+              <span className="hidden sm:inline">Fullscreen</span>
+              <span className="sm:hidden">Full</span>
+            </button>
+          </div>
+
+          {/* Center Toolbar Part: Format Tabs Selector */}
+          <div className="flex bg-slate-500/10 p-1.5 rounded-2xl border border-white/5">
+            {pdfUrl && (
+              <button 
+                onClick={() => setSelectedFormat('pdf')} 
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'pdf' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                PDF View
+              </button>
+            )}
+            {epubUrl && (
+              <button 
+                onClick={() => setSelectedFormat('epub')} 
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'epub' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                EPUB format
+              </button>
+            )}
+            {docxUrl && (
+              <button 
+                onClick={() => setSelectedFormat('docx')} 
+                className={`px-4 py-2 text-xs font-black uppercase tracking-wider rounded-xl transition-all ${selectedFormat === 'docx' ? 'bg-primary-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                Word (DOCX)
+              </button>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* PDF Controls Pagination Bar (only visible when PDF is selected) */}
-      {selectedFormat === 'pdf' && (
+          {/* Right Toolbar Part: Zoom (PDF only) & Save Indicator */}
+          <div className="flex items-center gap-4">
+            {selectedFormat === 'pdf' && (
+              <div className="flex items-center gap-2 border-r border-slate-600/20 pr-4">
+                <button 
+                  onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
+                  className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
+                >
+                  <ZoomOut size={16}/>
+                </button>
+                <span className="font-mono text-xs font-bold">{Math.round(scale * 100)}%</span>
+                <button 
+                  onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
+                  className={`p-2 rounded transition-colors ${darkMode ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
+                >
+                  <ZoomIn size={16}/>
+                </button>
+              </div>
+            )}
+
+            <div className="text-xs font-black uppercase tracking-wider">
+              {savingSync ? (
+                <span className="animate-pulse flex items-center gap-1.5 text-primary-500"><Save size={14}/> Syncing</span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-green-500"><Bookmark size={14}/> Auto Saved</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Controls Pagination Bar (only visible when PDF is selected and NOT in fullscreen) */}
+      {selectedFormat === 'pdf' && !isFullscreen && (
         <div className={`mt-4 mb-6 px-5 py-2.5 rounded-full flex items-center gap-5 shadow-lg border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/80 border-white/10 text-white shadow-black/20' : 'bg-white/80 border-slate-200/80 text-slate-855'}`}>
           <button 
             disabled={pageNumber <= 1} 
@@ -339,7 +441,14 @@ const EbookReader = () => {
       )}
 
       {/* Main Content Area */}
-      <div id="pdf-container" className="w-full max-w-5xl mt-4 flex justify-center relative group">
+      <div 
+        id="pdf-container" 
+        className="w-full max-w-5xl mt-4 flex justify-center relative group overflow-x-auto scrollbar-thin py-2 px-1"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleDoubleTap}
+      >
         
         {/* Floating Page Flip Arrows (Desktop only) */}
         {selectedFormat === 'pdf' && (
@@ -420,6 +529,7 @@ const EbookReader = () => {
                     scale={scale} 
                     renderTextLayer={false} 
                     renderAnnotationLayer={false} 
+                    devicePixelRatio={Math.min(3, window.devicePixelRatio || 1)}
                   />
                 </motion.div>
               </AnimatePresence>
@@ -495,6 +605,98 @@ const EbookReader = () => {
         )}
 
       </div>
+
+      {/* Bottom spacer to prevent content from being cut off by the floating toolbar */}
+      {isFullscreen && <div className="h-28 w-full shrink-0" />}
+
+      {/* Floating Bottom Control Bar for Fullscreen Mode */}
+      {isFullscreen && selectedFormat === 'pdf' && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-lg p-4 rounded-3xl shadow-2xl flex flex-col gap-3 border transition-all backdrop-blur-md ${darkMode ? 'bg-[#111827]/90 text-slate-200 border-white/10 shadow-black/40' : 'bg-white/90 text-slate-800 border-slate-200/80 shadow-slate-300/40'}`}>
+          {/* Top Row: Page Scrubber slider */}
+          <div className="flex items-center gap-3 w-full px-1">
+            <span className="text-[10px] font-mono font-bold select-none opacity-60">1</span>
+            <input 
+              type="range" 
+              min="1" 
+              max={numPages || 1} 
+              value={pageNumber} 
+              onChange={(e) => {
+                const newPg = parseInt(e.target.value);
+                setPageNumber(newPg);
+                saveProgress(newPg, numPages);
+              }}
+              className="w-full accent-primary-500 cursor-pointer h-1.5 rounded-lg bg-slate-300/40 dark:bg-slate-700/40" 
+            />
+            <span className="text-[10px] font-mono font-bold select-none opacity-60">{numPages || 1}</span>
+          </div>
+
+          {/* Bottom Row: Actions */}
+          <div className="flex items-center justify-between w-full">
+            {/* Page navigation */}
+            <div className="flex items-center gap-1.5">
+              <button 
+                disabled={pageNumber <= 1} 
+                onClick={() => changePage(-1)}
+                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span className="text-[11px] font-black font-mono tracking-tight px-1 select-none">
+                {pageNumber} / {numPages || '?'}
+              </span>
+              <button 
+                disabled={pageNumber >= numPages} 
+                onClick={() => changePage(1)}
+                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
+                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-750'}`}
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span className="text-[10px] font-mono font-bold min-w-[32px] text-center select-none">{Math.round(scale * 100)}%</span>
+              <button 
+                onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
+                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-750'}`}
+              >
+                <ZoomIn size={16} />
+              </button>
+            </div>
+
+            {/* Actions: Theme Toggle, Book Mode, Fullscreen Exit */}
+            <div className="flex items-center gap-1.5">
+              <button 
+                onClick={() => setDarkMode(!darkMode)} 
+                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'}`}
+                title="Toggle Theme"
+              >
+                {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />}
+              </button>
+              <button 
+                onClick={() => setBookMode(!bookMode)} 
+                className={`p-2 rounded-xl border transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
+                title="Toggle Book Layout"
+              >
+                <Sparkles size={16} className={bookMode ? 'text-primary-450' : 'text-slate-400'} />
+              </button>
+              <button 
+                onClick={toggleFullscreen}
+                className="p-2 rounded-xl border bg-primary-600 border-primary-500 text-white hover:bg-primary-500 transition-all shadow-md shadow-primary-600/20"
+                title="Exit Fullscreen"
+              >
+                <Minimize size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
     </div>
   );
