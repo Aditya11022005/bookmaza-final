@@ -36,7 +36,7 @@ const About = () => {
               A modern publication house dedicated to stories, knowledge, and creativity.
             </motion.p>
             <motion.p variants={fadeInUp} className="text-lg text-primary-200 mb-10 font-semibold border-l-4 border-primary-300 pl-4 py-1 max-w-xl mx-auto lg:mx-0">
-              Pustak Maza is a publishing imprint of <Link to="/about" className="text-white hover:text-primary-300 underline decoration-primary-400 underline-offset-4 transition-colors">Book Saga Publication</Link>.
+              Pustak Maza is a publishing imprint of <Link to="/about" className="text-white hover:text-primary-300 underline decoration-primary-400 underline-offset-4 transition-colors">Book Saga Publications</Link>.
             </motion.p>
             <motion.div variants={fadeInUp}>
               <Link to="/shop" className="inline-flex items-center justify-center gap-2 bg-white text-primary-600 px-8 py-4 rounded-xl font-bold text-lg shadow-[0_8px_25px_-5px_rgba(0,0,0,0.3)] hover:bg-primary-50 hover:-translate-y-1 transition-all">

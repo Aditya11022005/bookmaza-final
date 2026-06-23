@@ -48,22 +48,29 @@ const Login = () => {
   };
 
   useEffect(() => {
+    let intervalId;
     const initializeGoogle = () => {
       if (window.google && window.google.accounts) {
-        window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "1038596637841-sampleclientid.apps.googleusercontent.com",
-          callback: handleGoogleCredentialResponse,
-        });
-        window.google.accounts.id.renderButton(
-          document.getElementById("google-signin-btn"),
-          { theme: "outline", size: "large", width: 380 }
-        );
+        const btnElement = document.getElementById("google-signin-btn");
+        if (btnElement) {
+          window.google.accounts.id.initialize({
+            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "217402764320-1u4j6cmr7gfti55ojs5f887jifl0u7h7.apps.googleusercontent.com",
+            callback: handleGoogleCredentialResponse,
+          });
+          window.google.accounts.id.renderButton(
+            btnElement,
+            { theme: "outline", size: "large", width: 380 }
+          );
+          if (intervalId) clearInterval(intervalId);
+        }
       }
     };
 
     initializeGoogle();
-    const timer = setTimeout(initializeGoogle, 1000);
-    return () => clearTimeout(timer);
+    intervalId = setInterval(initializeGoogle, 500);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   return (

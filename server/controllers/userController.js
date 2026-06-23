@@ -409,11 +409,13 @@ const googleLogin = async (req, res) => {
       return res.status(400).json({ message: 'Google Token audience mismatch' });
     }
 
-    const { name, email } = decoded;
+    const { name, email, picture } = decoded;
 
     let user = await User.findOne({ email });
+    let isNewUser = false;
 
     if (!user) {
+      isNewUser = true;
       // Auto-signup Google user
       const randomPassword = Math.random().toString(36).slice(-12);
       user = await User.create({
@@ -421,7 +423,36 @@ const googleLogin = async (req, res) => {
         email,
         password: randomPassword,
         role: 'customer',
-        isAuthorApproved: true
+        isAuthorApproved: true,
+        profileImage: picture || ''
+      });
+    } else if (picture && !user.profileImage) {
+      user.profileImage = picture;
+      await user.save();
+    }
+
+    if (isNewUser) {
+      // Send welcome email
+      const welcomeHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b1329; color: #ffffff;">
+          <h2 style="color: #a855f7; text-align: center; font-size: 24px; font-weight: 800;">Welcome to Pustak Maza! 📚</h2>
+          <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">Hi ${user.name},</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #94a3b8;">Thank you for registering at Pustak Maza! We are thrilled to have you join our reading and publishing platform.</p>
+          <p style="font-size: 14px; line-height: 1.6; color: #94a3b8;">You can now securely browse, read, play, and purchase premium books, ebooks, and audiobooks.</p>
+          <div style="text-align: center; margin: 25px 0;">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/shop" style="background-color: #a855f7; color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-block;">Browse Book Shop</a>
+          </div>
+          <p style="font-size: 12px; color: #64748b; border-t: 1px solid #334155; pt-15; margin-top: 20px;">If you have any questions or feedback, feel free to reply directly to this mail.</p>
+          <p style="font-size: 14px; font-weight: bold; color: #a855f7; margin-top: 15px;">Happy Reading,<br>The Pustak Maza Team</p>
+        </div>
+      `;
+      
+      sendEmail({
+        email: user.email,
+        subject: 'Welcome to Pustak Maza! 📚',
+        html: welcomeHtml
+      }).catch(mailErr => {
+        console.error('Welcome email failed to send:', mailErr.message);
       });
     }
 
@@ -430,6 +461,8 @@ const googleLogin = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isAuthorApproved: user.isAuthorApproved,
+      profileImage: user.profileImage,
       token: generateToken(user._id)
     });
   } catch (error) {
