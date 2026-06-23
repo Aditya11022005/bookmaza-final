@@ -18,6 +18,7 @@ const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements'));
 const AdminCertificates = lazy(() => import('./pages/admin/AdminCertificates'));
 const AdminReviews = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminReviews })));
 const AdminMessages = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMessages })));
@@ -151,6 +152,7 @@ const App = () => {
               <Route path="orders" element={<AdminOrders />} />
               <Route path="payments" element={<AdminPlaceholder title="Stripe Payments Log" />} />
               <Route path="banners" element={<AdminBanners />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
               <Route path="coupons" element={<AdminCoupons />} />
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="messages" element={<AdminMessages />} />

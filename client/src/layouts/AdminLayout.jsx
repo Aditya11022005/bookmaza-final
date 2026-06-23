@@ -6,7 +6,8 @@ import useAdminAuthStore from '../store/adminAuthStore';
 import {
   LayoutDashboard, BookOpen, Users, ShoppingBag, UserCog,
   Image, Tag, Settings, LogOut, Menu, X, ChevronRight,
-  Bell, Search, Sun, Moon, ChevronLeft, Star, MessageSquare, Mail, Award, FolderOpen
+  Bell, Search, Sun, Moon, ChevronLeft, Star, MessageSquare, Mail, Award, FolderOpen,
+  Megaphone
 } from 'lucide-react';
 
 // ─── Navigation Config ──────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ const NAV_GROUPS = [
     label: 'Marketing & Support',
     items: [
       { name: 'Banners', path: '/admin/dashboard/banners', icon: Image },
+      { name: 'Announcements', path: '/admin/dashboard/announcements', icon: Megaphone },
       { name: 'Coupons', path: '/admin/dashboard/coupons', icon: Tag },
       { name: 'Messages', path: '/admin/dashboard/messages', icon: MessageSquare },
       { name: 'Subscribers', path: '/admin/dashboard/subscribers', icon: Mail },
@@ -51,6 +53,7 @@ const PAGE_TITLES = {
   '/admin/dashboard/users': 'Users',
   '/admin/dashboard/reviews': 'Reviews',
   '/admin/dashboard/banners': 'Banners',
+  '/admin/dashboard/announcements': 'Announcements',
   '/admin/dashboard/coupons': 'Coupons',
   '/admin/dashboard/messages': 'Messages',
   '/admin/dashboard/subscribers': 'Subscribers',
