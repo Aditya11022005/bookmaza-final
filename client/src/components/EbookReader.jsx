@@ -561,8 +561,8 @@ const EbookReader = () => {
       id="ebook-reader-root" 
       className={`transition-colors duration-300 flex flex-col items-center ${
         isFullscreen 
-          ? `fixed inset-0 z-[9999] w-screen h-screen overflow-y-auto px-2 py-3 ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}` 
-          : `min-h-screen py-4 md:py-8 px-4 w-full ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}`
+          ? `fixed inset-0 z-[9999] w-screen h-screen overflow-y-auto px-0 py-1 ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}` 
+          : `min-h-screen py-4 md:py-8 px-0 md:px-4 w-full ${darkMode ? 'bg-[#0b0f19]' : 'bg-slate-50'}`
       }`}
     >
       {/* Immersive Fullscreen Header (Compact and subtle) */}
@@ -571,7 +571,8 @@ const EbookReader = () => {
           <span className="font-poppins font-bold truncate max-w-[50%]">{book.title}</span>
           <span className="flex items-center gap-1.5 opacity-80">
             <Sparkles size={12} className="text-primary-400 animate-pulse" />
-            <span>Double-tap to Zoom • Swipe to Turn</span>
+            <span className="hidden sm:inline">Double-tap to Zoom • Swipe to Turn</span>
+            <span className="sm:hidden">Gestures Active</span>
           </span>
         </div>
       )}
@@ -751,7 +752,7 @@ const EbookReader = () => {
       {/* Main Content Area */}
       <div 
         id="pdf-container" 
-        className="w-full max-w-5xl mt-4 flex justify-center relative group overflow-x-auto scrollbar-thin py-2 px-1"
+        className="w-full max-w-5xl mt-2 md:mt-4 flex justify-center relative group overflow-x-auto scrollbar-thin py-1 md:py-2 px-0 md:px-1"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={(e) => {
@@ -786,10 +787,10 @@ const EbookReader = () => {
         {/* Render PDF Format */}
         {selectedFormat === 'pdf' && (
           <div 
-            className={`shadow-2xl overflow-hidden relative transition-all duration-500 ${
+            className={`overflow-hidden relative transition-all duration-500 w-full md:w-auto shadow-none md:shadow-2xl ${
               bookMode 
-                ? 'rounded-r-2xl border-y border-r border-slate-400/40 bg-white shadow-[4px_4px_0px_#94a3b8,8px_8px_0px_#cbd5e1,12px_12px_0px_#e2e8f0]' 
-                : 'rounded-2xl border border-slate-300/30'
+                ? 'rounded-none border-none md:rounded-r-2xl md:border-y md:border-r md:border-slate-400/40 bg-white shadow-none md:shadow-[4px_4px_0px_#94a3b8,8px_8px_0px_#cbd5e1,12px_12px_0px_#e2e8f0]' 
+                : 'rounded-none border-none md:rounded-2xl md:border md:border-slate-300/30'
             }`}
             style={{ 
               filter: darkMode ? 'invert(0.9) hue-rotate(180deg) contrast(1.15)' : 'none', 
@@ -817,7 +818,7 @@ const EbookReader = () => {
 
             {/* Crease shadow to make it look like open book spine */}
             {bookMode && (
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/25 via-black/5 to-transparent z-25 pointer-events-none" />
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/25 via-black/5 to-transparent z-25 pointer-events-none hidden md:block" />
             )}
 
             <Document
@@ -944,90 +945,100 @@ const EbookReader = () => {
           </div>
 
           {/* Bottom Row: Actions */}
-          <div className="flex items-center justify-between w-full">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 w-full">
+            
             {/* Page navigation */}
-            <div className="flex items-center gap-1.5">
-              <button 
-                disabled={pageNumber <= 1} 
-                onClick={() => changePage(-1)}
-                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="text-[11px] font-black font-mono tracking-tight px-1 select-none">
-                {pageNumber} / {numPages || '?'}
-              </span>
-              <button 
-                disabled={pageNumber >= numPages} 
-                onClick={() => changePage(1)}
-                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
-              >
-                <ChevronRight size={16} />
-              </button>
+            <div className="flex items-center justify-between md:justify-start gap-2 w-full md:w-auto">
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-50 md:hidden">Navigate</span>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  disabled={pageNumber <= 1} 
+                  onClick={() => changePage(-1)}
+                  className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="text-[11px] font-black font-mono tracking-tight px-2 min-w-[54px] text-center select-none">
+                  {pageNumber} / {numPages || '?'}
+                </span>
+                <button 
+                  disabled={pageNumber >= numPages} 
+                  onClick={() => changePage(1)}
+                  className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white disabled:opacity-30' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700 disabled:opacity-30'}`}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Zoom Controls */}
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
-                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-750'}`}
-              >
-                <ZoomOut size={16} />
-              </button>
-              <span className="text-[10px] font-mono font-bold min-w-[32px] text-center select-none">{Math.round(scale * 100)}%</span>
-              <button 
-                onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
-                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-750'}`}
-              >
-                <ZoomIn size={16} />
-              </button>
+            <div className="flex items-center justify-between md:justify-start gap-2 w-full md:w-auto">
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-50 md:hidden">Zoom</span>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setScale(s => Math.max(0.6, s - 0.1))} 
+                  className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-755'}`}
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <span className="text-[10px] font-mono font-bold min-w-[36px] text-center select-none">{Math.round(scale * 100)}%</span>
+                <button 
+                  onClick={() => setScale(s => Math.min(2.0, s + 0.1))} 
+                  className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-755'}`}
+                >
+                  <ZoomIn size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Actions: Bookmark, Shelf, Theme Toggle, Book Mode, Fullscreen Exit */}
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={toggleBookmark}
-                className={`p-2 rounded-xl border transition-all ${
-                  bookmarks.some(b => b.page === pageNumber)
-                    ? 'bg-yellow-600/15 border-yellow-500/30 text-yellow-500 hover:bg-yellow-600/20' 
-                    : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
-                }`}
-                title="Bookmark Page"
-              >
-                <Bookmark size={16} className={bookmarks.some(b => b.page === pageNumber) ? 'fill-yellow-500 text-yellow-500' : ''} />
-              </button>
-              <button 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className={`p-2 rounded-xl border transition-all ${
-                  sidebarOpen
-                    ? 'bg-primary-600 border-primary-500 text-white' 
-                    : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
-                }`}
-                title="Open Notes, Search, Bookmarks"
-              >
-                <PanelRight size={16} />
-              </button>
-              <button 
-                onClick={() => setDarkMode(!darkMode)} 
-                className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'}`}
-                title="Toggle Theme"
-              >
-                {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />}
-              </button>
-              <button 
-                onClick={() => setBookMode(!bookMode)} 
-                className={`p-2 rounded-xl border transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}
-                title="Toggle Book Layout"
-              >
-                <Sparkles size={16} className={bookMode ? 'text-primary-450' : 'text-slate-400'} />
-              </button>
-              <button 
-                onClick={toggleFullscreen}
-                className="p-2 rounded-xl border bg-primary-600 border-primary-500 text-white hover:bg-primary-500 transition-all shadow-md shadow-primary-600/20"
-                title="Exit Fullscreen"
-              >
-                <Minimize size={16} />
-              </button>
+            <div className="flex items-center justify-between md:justify-end gap-1.5 w-full md:w-auto border-t border-slate-500/10 pt-3 md:pt-0 md:border-none">
+              <span className="text-[10px] uppercase font-black tracking-wider opacity-50 md:hidden">Tools</span>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={toggleBookmark}
+                  className={`p-2 rounded-xl border transition-all ${
+                    bookmarks.some(b => b.page === pageNumber)
+                      ? 'bg-yellow-600/15 border-yellow-500/30 text-yellow-500 hover:bg-yellow-600/20' 
+                      : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Bookmark Page"
+                >
+                  <Bookmark size={16} className={bookmarks.some(b => b.page === pageNumber) ? 'fill-yellow-500 text-yellow-500' : ''} />
+                </button>
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className={`p-2 rounded-xl border transition-all ${
+                    sidebarOpen
+                      ? 'bg-primary-600 border-primary-500 text-white' 
+                      : darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'
+                  }`}
+                  title="Open Notes, Search, Bookmarks"
+                >
+                  <PanelRight size={16} />
+                </button>
+                <button 
+                  onClick={() => setDarkMode(!darkMode)} 
+                  className={`p-2 rounded-xl border transition-all ${darkMode ? 'bg-white/5 border-white/10 hover:bg-white/10 text-white' : 'bg-slate-100 border-slate-200 hover:bg-slate-200 text-slate-700'}`}
+                  title="Toggle Theme"
+                >
+                  {darkMode ? <Sun size={16} className="text-yellow-400" /> : <Moon size={16} className="text-indigo-600" />}
+                </button>
+                <button 
+                  onClick={() => setBookMode(!bookMode)} 
+                  className={`p-2 rounded-xl border transition-all ${bookMode ? 'bg-primary-600/10 border-primary-500/30 text-primary-400' : darkMode ? 'bg-white/5 border-white/10 text-slate-300 hover:text-white' : 'bg-slate-100 border-slate-200 text-slate-650 hover:bg-slate-200'}`}
+                  title="Toggle Book Layout"
+                >
+                  <Sparkles size={16} className={bookMode ? 'text-primary-450' : 'text-slate-400'} />
+                </button>
+                <button 
+                  onClick={toggleFullscreen}
+                  className="p-2 rounded-xl border bg-primary-600 border-primary-500 text-white hover:bg-primary-500 transition-all shadow-md shadow-primary-600/20"
+                  title="Exit Fullscreen"
+                >
+                  <Minimize size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
