@@ -15,6 +15,7 @@ const AdminAnnouncements = () => {
   // Form states
   const [selectedBookId, setSelectedBookId] = useState('');
   const [launchDate, setLaunchDate] = useState('');
+  const [launchTime, setLaunchTime] = useState('00:00');
   const [editingBook, setEditingBook] = useState(null);
   const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,6 +88,7 @@ const AdminAnnouncements = () => {
     setEditingBook(null);
     setSelectedBookId('');
     setLaunchDate('');
+    setLaunchTime('00:00');
     setBookSearch('');
     setIsModalOpen(true);
   };
@@ -94,18 +96,35 @@ const AdminAnnouncements = () => {
   const openEditModal = (book) => {
     setEditingBook(book);
     setSelectedBookId(book._id);
-    setLaunchDate(book.launchDate ? new Date(book.launchDate).toISOString().substring(0, 16) : '');
+    if (book.launchDate) {
+      const dateObj = new Date(book.launchDate);
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      setLaunchDate(`${year}-${month}-${day}`);
+      const hours = String(dateObj.getHours()).padStart(2, '0');
+      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+      setLaunchTime(`${hours}:${minutes}`);
+    } else {
+      setLaunchDate('');
+      setLaunchTime('00:00');
+    }
     setIsModalOpen(true);
   };
 
   const handleSaveAnnouncement = async (e) => {
     e.preventDefault();
     if (!selectedBookId || !launchDate) {
-      toast.error('Please select a book and launch date/time');
+      toast.error('Please select a book and launch date');
       return;
     }
 
-    if (new Date(launchDate) <= new Date()) {
+    // Combine local date and time to local timezone Date object
+    const [year, month, day] = launchDate.split('-').map(Number);
+    const [hours, minutes] = (launchTime || '00:00').split(':').map(Number);
+    const combinedDate = new Date(year, month - 1, day, hours, minutes);
+
+    if (combinedDate <= new Date()) {
       toast.error('Launch date and time must be in the future');
       return;
     }
@@ -116,7 +135,7 @@ const AdminAnnouncements = () => {
       // Schedule the book: set isAnnounced to true, update launch date, and set isPublished to false (draft)
       await axios.put(`/books/${selectedBookId}`, {
         isAnnounced: true,
-        launchDate: new Date(launchDate).toISOString(),
+        launchDate: combinedDate.toISOString(),
         isPublished: false
       });
       
@@ -467,17 +486,36 @@ const AdminAnnouncements = () => {
                     )}
                   </div>
 
-                  {/* Launch Date & Time */}
-                  <div>
-                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Launch Date & Time</label>
-                    <div className="relative">
-                      <input 
-                        type="datetime-local" 
-                        required
-                        value={launchDate}
-                        onChange={(e) => setLaunchDate(e.target.value)}
-                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
-                      />
+                   {/* Launch Date & Time */}
+                  <div className="space-y-4">
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest -mb-1">Launch Date & Time</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Date</span>
+                        <div className="relative">
+                          <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                          <input 
+                            type="date" 
+                            required
+                            value={launchDate}
+                            onChange={(e) => setLaunchDate(e.target.value)}
+                            className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Time</span>
+                        <div className="relative">
+                          <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                          <input 
+                            type="time" 
+                            required
+                            value={launchTime}
+                            onChange={(e) => setLaunchTime(e.target.value)}
+                            className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
+                          />
+                        </div>
+                      </div>
                     </div>
                     <p className="text-[11px] text-slate-500 mt-1.5">
                       The book will remain in draft mode until this time, and will automatically become available and public after it passes.

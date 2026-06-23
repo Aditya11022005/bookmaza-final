@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Filter, Edit, Trash2, Star, X, Upload, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Search, Plus, Filter, Edit, Trash2, Star, X, Upload, Check, AlertCircle, Eye, EyeOff, Calendar, Clock } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -22,6 +22,7 @@ const AdminBooks = () => {
   const [isPublished, setIsPublished] = useState(true);
   const [isAnnounced, setIsAnnounced] = useState(false);
   const [launchDate, setLaunchDate] = useState('');
+  const [launchTime, setLaunchTime] = useState('00:00');
 
   // New metadata fields
   const [isbn, setIsbn] = useState('');
@@ -135,6 +136,7 @@ const AdminBooks = () => {
     setPothiLink('');
     setIsAnnounced(false);
     setLaunchDate('');
+    setLaunchTime('00:00');
     
     setIsModalOpen(true);
   };
@@ -150,7 +152,19 @@ const AdminBooks = () => {
     setImages(book.images || []);
     setIsPublished(book.isPublished);
     setIsAnnounced(book.isAnnounced || false);
-    setLaunchDate(book.launchDate ? new Date(book.launchDate).toISOString().substring(0, 16) : '');
+    if (book.launchDate) {
+      const dateObj = new Date(book.launchDate);
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      setLaunchDate(`${year}-${month}-${day}`);
+      const hours = String(dateObj.getHours()).padStart(2, '0');
+      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+      setLaunchTime(`${hours}:${minutes}`);
+    } else {
+      setLaunchDate('');
+      setLaunchTime('00:00');
+    }
 
     setEbookAvailable(book.formats?.ebook?.isAvailable || false);
     setEbookPrice(book.formats?.ebook?.price || 0);
@@ -226,6 +240,13 @@ const AdminBooks = () => {
       return;
     }
 
+    let combinedLaunchDate = null;
+    if (isAnnounced && launchDate) {
+      const [year, month, day] = launchDate.split('-').map(Number);
+      const [hours, minutes] = (launchTime || '00:00').split(':').map(Number);
+      combinedLaunchDate = new Date(year, month - 1, day, hours, minutes).toISOString();
+    }
+
     const payload = {
       title,
       description,
@@ -234,7 +255,7 @@ const AdminBooks = () => {
       images,
       isPublished,
       isAnnounced,
-      launchDate: isAnnounced ? launchDate : null,
+      launchDate: combinedLaunchDate,
       isbn,
       discountPercentage: Number(discountPercentage) || 0,
       pages: pages ? Number(pages) : undefined,
@@ -580,15 +601,36 @@ const AdminBooks = () => {
                       </div>
 
                       {isAnnounced && (
-                        <div className="bg-[#1e293b]/40 border border-[#334155]/60 rounded-xl p-4 space-y-2">
-                          <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest">Launch Date & Time</label>
-                          <input 
-                            type="datetime-local" 
-                            required={isAnnounced}
-                            value={launchDate}
-                            onChange={(e) => setLaunchDate(e.target.value)}
-                            className="w-full max-w-xs bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
-                          />
+                        <div className="bg-[#1e293b]/40 border border-[#334155]/60 rounded-xl p-4 space-y-4">
+                          <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest -mb-1">Launch Date & Time</label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Date</span>
+                              <div className="relative">
+                                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                <input 
+                                  type="date" 
+                                  required={isAnnounced}
+                                  value={launchDate}
+                                  onChange={(e) => setLaunchDate(e.target.value)}
+                                  className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <span className="block text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Time</span>
+                              <div className="relative">
+                                <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                <input 
+                                  type="time" 
+                                  required={isAnnounced}
+                                  value={launchTime}
+                                  onChange={(e) => setLaunchTime(e.target.value)}
+                                  className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-primary-500/50 cursor-pointer" 
+                                />
+                              </div>
+                            </div>
+                          </div>
                           <p className="text-[11px] text-slate-400">
                             The book will remain in draft mode until this time, and will automatically become available and public after it passes.
                           </p>
