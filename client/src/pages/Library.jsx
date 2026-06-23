@@ -324,10 +324,13 @@ const Library = () => {
          </div>
       ) : viewMode === 'bookshelf' ? (
          /* 3D Virtual Bookshelf View Mode */
-         <div className="bg-[#fcf8f2] rounded-[2.5rem] border border-[#eadaab]/60 p-6 sm:p-10 shadow-[inset_0_4px_20px_rgba(0,0,0,0.03)] relative overflow-hidden">
-            {/* Wooden poles/columns decoration on left and right edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-[#573314] to-[#855329] border-r border-[#3e220a] z-30 pointer-events-none rounded-l-[2.5rem]"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-[#573314] to-[#855329] border-l border-[#3e220a] z-30 pointer-events-none rounded-r-[2.5rem]"></div>
+          <div 
+            className="rounded-[2.5rem] border border-[#3b0764]/40 p-6 sm:p-10 shadow-[inset_0_4px_30px_rgba(0,0,0,0.5)] relative overflow-hidden"
+            style={{ background: 'radial-gradient(circle at 50% 50%, rgba(106, 13, 173, 0.18) 0%, rgba(15, 7, 25, 0) 80%), #0f0719' }}
+          >
+             {/* Wooden poles/columns decoration on left and right edges */}
+             <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-[#17002c] to-[#3b0764] border-r border-[#17002c]/50 z-30 pointer-events-none rounded-l-[2.5rem]"></div>
+             <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-[#17002c] to-[#3b0764] border-l border-[#17002c]/50 z-30 pointer-events-none rounded-r-[2.5rem]"></div>
 
             {/* Grid of Books */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-16 px-4 py-6">

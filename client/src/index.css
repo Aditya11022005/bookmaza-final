@@ -91,47 +91,50 @@
   padding-bottom: 24px;
 }
 
-/* 3D Wood Shelf Plank styling */
+/* 3D Wood Shelf Plank styling with Purple LED Back-glow */
 .shelf-plank {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 24px;
-  background: linear-gradient(to bottom, #855329 0%, #573314 100%);
+  height: 20px;
+  background: linear-gradient(to bottom, #3b0764 0%, #17002c 100%);
   border-radius: 4px;
   box-shadow: 
-    0 15px 25px -5px rgba(0, 0, 0, 0.4), 
-    inset 0 1px 1px rgba(255, 255, 255, 0.25);
+    0 -4px 12px rgba(168, 85, 247, 0.35), /* Electric purple glow upwards */
+    0 15px 30px rgba(0, 0, 0, 0.5), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
   z-index: 10;
 }
 
-/* Wooden Shelf Top Face (Tilt and Perspective) */
+/* Shelf Top Face (Tilt and Perspective) */
 .shelf-plank::before {
   content: '';
   position: absolute;
-  top: -12px;
+  top: -10px;
   left: 0;
   right: 0;
-  height: 12px;
-  background: linear-gradient(to bottom, #a66a38 0%, #855329 100%);
+  height: 10px;
+  background: linear-gradient(to bottom, #581c87 0%, #3b0764 100%);
   transform: perspective(500px) rotateX(50deg);
   transform-origin: bottom;
-  box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.3);
 }
 
-/* Wooden Shelf Bottom Glow/Drop Shadow */
+/* Neon Glow Strip at the back edge of the shelf */
 .shelf-plank::after {
   content: '';
   position: absolute;
-  top: 12px;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.4);
-  filter: blur(10px);
-  z-index: -1;
-  pointer-events: none;
+  top: -11px;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background: #f3e8ff;
+  box-shadow: 
+    0 0 6px #a855f7,
+    0 0 12px #6a0dad;
+  opacity: 0.85;
+  z-index: 2;
 }
 
 /* 3D Scene Viewport */
@@ -150,13 +153,13 @@
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
-  transform: rotateY(-16deg);
+  transform: rotateY(-15deg);
   transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 /* Hover rotation pop-out effect */
 .book-scene:hover .book-wrap {
-  transform: translateZ(50px) translateY(-20px) rotateY(-4deg);
+  transform: translateZ(60px) translateY(-25px) rotateY(-4deg);
 }
 
 /* Common Book Face layout */
@@ -172,16 +175,35 @@
   z-index: 2;
   box-shadow: 
     inset 4px 0 8px rgba(255, 255, 255, 0.35),
-    0 10px 25px rgba(0, 0, 0, 0.4);
+    0 12px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* Glossy glass reflection overlay on front cover */
+.book-front::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.25) 0%, 
+    rgba(255, 255, 255, 0.05) 45%, 
+    rgba(0, 0, 0, 0.1) 50%, 
+    rgba(0, 0, 0, 0) 100%
+  );
+  border-radius: 2px 6px 6px 2px;
+  pointer-events: none;
+  z-index: 5;
 }
 
 .book-back {
   transform: rotateY(180deg) translateZ(10px);
-  background: #1e1b4b;
+  background: #17002c;
   border-radius: 6px 2px 2px 6px;
   box-shadow: 
-    inset -4px 0 8px rgba(255, 255, 255, 0.2),
-    0 10px 25px rgba(0, 0, 0, 0.4);
+    inset -4px 0 8px rgba(255, 255, 255, 0.15),
+    0 12px 25px rgba(0, 0, 0, 0.5);
 }
 
 /* Book left spine styling */
@@ -190,7 +212,7 @@
   left: 0;
   width: 20px;
   height: 100%;
-  background: linear-gradient(to right, #6d28d9 0%, #4c1d95 100%);
+  background: linear-gradient(to right, #6a0dad 0%, #3b0764 100%);
   transform: rotateY(-90deg) translateZ(10px);
   transform-origin: left;
   border-radius: 2px 0 0 2px;
@@ -204,11 +226,11 @@
   width: 20px;
   height: 98%;
   top: 1%;
-  background: #f8fafc;
+  background: #fafaf9;
   background-image: linear-gradient(90deg, 
     rgba(0, 0, 0, 0) 0%, 
-    rgba(0, 0, 0, 0) 80%, 
-    rgba(0, 0, 0, 0.08) 85%, 
+    rgba(0, 0, 0, 0) 82%, 
+    rgba(0, 0, 0, 0.08) 86%, 
     rgba(0, 0, 0, 0) 90%
   );
   background-size: 3px 100%;
@@ -217,4 +239,5 @@
   border-radius: 0 4px 4px 0;
   box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.15);
 }
+
 
