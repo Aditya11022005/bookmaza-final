@@ -13,6 +13,7 @@ const settingsSchema = new mongoose.Schema(
     contactPhone: { type: String, default: '+91 93224 65522' },
     contactWhatsApp: { type: String, default: '919322465522' },
     contactAddress: { type: String, default: 'Pustak Maza HQ, Pune, Maharashtra, India' },
+    contactAddress2: { type: String, default: '' },
     contactHours: { type: String, default: 'Mon - Sat: 9:00 AM - 6:00 PM' },
     defaultRoyaltyPercentage: { type: Number, default: 25 },
     autoApproveAuthors: { type: Boolean, default: false },

@@ -40,6 +40,7 @@ const AdminBooks = () => {
   const [coAuthor, setCoAuthor] = useState('');
   const [chiefEditor, setChiefEditor] = useState('');
   const [editor, setEditor] = useState('');
+  const [coEditor, setCoEditor] = useState('');
   const [amazonLink, setAmazonLink] = useState('');
   const [flipkartLink, setFlipkartLink] = useState('');
   const [pothiLink, setPothiLink] = useState('');
@@ -134,6 +135,7 @@ const AdminBooks = () => {
     setCoAuthor('');
     setChiefEditor('');
     setEditor('');
+    setCoEditor('');
     setAmazonLink('');
     setFlipkartLink('');
     setPothiLink('');
@@ -213,6 +215,7 @@ const AdminBooks = () => {
     setCoAuthor(book.coAuthor || '');
     setChiefEditor(book.chiefEditor || '');
     setEditor(book.editor || '');
+    setCoEditor(book.coEditor || '');
     setAmazonLink(book.amazonLink || '');
     setFlipkartLink(book.flipkartLink || '');
     setPothiLink(book.pothiLink || '');
@@ -290,6 +293,7 @@ const AdminBooks = () => {
       coAuthor,
       chiefEditor,
       editor,
+      coEditor,
       amazonLink,
       flipkartLink,
       pothiLink,
@@ -818,7 +822,7 @@ const AdminBooks = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Co-Author Name(s)</label>
                         <input 
@@ -846,6 +850,16 @@ const AdminBooks = () => {
                           value={editor}
                           onChange={(e) => setEditor(e.target.value)}
                           placeholder="Editor" 
+                          className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Co-Editor</label>
+                        <input 
+                          type="text" 
+                          value={coEditor}
+                          onChange={(e) => setCoEditor(e.target.value)}
+                          placeholder="Co-Editor" 
                           className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
                         />
                       </div>

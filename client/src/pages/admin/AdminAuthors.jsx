@@ -17,6 +17,11 @@ const AdminAuthors = () => {
     email: '', 
     password: '',
     royaltyPercentage: 25,
+    royaltyPercentages: {
+      ebook: 25,
+      audiobook: 25,
+      hardcopy: 25
+    },
     isAuthorApproved: false
   });
   const [submitting, setSubmitting] = useState(false);
@@ -64,6 +69,11 @@ const AdminAuthors = () => {
       email: author.email || '',
       password: '', // Keep blank during edit
       royaltyPercentage: author.royaltyPercentage !== undefined ? author.royaltyPercentage : 25,
+      royaltyPercentages: {
+        ebook: (author.royaltyPercentages && author.royaltyPercentages.ebook !== undefined) ? author.royaltyPercentages.ebook : (author.royaltyPercentage !== undefined ? author.royaltyPercentage : 25),
+        audiobook: (author.royaltyPercentages && author.royaltyPercentages.audiobook !== undefined) ? author.royaltyPercentages.audiobook : (author.royaltyPercentage !== undefined ? author.royaltyPercentage : 25),
+        hardcopy: (author.royaltyPercentages && author.royaltyPercentages.hardcopy !== undefined) ? author.royaltyPercentages.hardcopy : (author.royaltyPercentage !== undefined ? author.royaltyPercentage : 25)
+      },
       isAuthorApproved: author.isAuthorApproved || false
     });
     setIsModalOpen(true);
@@ -76,6 +86,11 @@ const AdminAuthors = () => {
       email: '',
       password: '',
       royaltyPercentage: 25,
+      royaltyPercentages: {
+        ebook: 25,
+        audiobook: 25,
+        hardcopy: 25
+      },
       isAuthorApproved: true // default approved when admin manually adds
     });
     setIsModalOpen(true);
@@ -94,6 +109,7 @@ const AdminAuthors = () => {
           name: form.name,
           email: form.email,
           royaltyPercentage: form.royaltyPercentage,
+          royaltyPercentages: form.royaltyPercentages,
           isAuthorApproved: form.isAuthorApproved
         };
         await axios.put(`/users/${editingAuthor._id}`, updateData);
@@ -110,7 +126,8 @@ const AdminAuthors = () => {
           password: form.password,
           role: 'author',
           isAuthorApproved: form.isAuthorApproved,
-          royaltyPercentage: form.royaltyPercentage
+          royaltyPercentage: form.royaltyPercentage,
+          royaltyPercentages: form.royaltyPercentages
         });
         toast.success('Author profile registered successfully');
       }
@@ -211,9 +228,11 @@ const AdminAuthors = () => {
                           </div>
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap">
-                          <span className="text-white font-black text-sm bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg">
-                            {author.royaltyPercentage !== undefined ? author.royaltyPercentage : 25}%
-                          </span>
+                          <div className="flex flex-col gap-1 text-[11px] font-bold">
+                            <span className="text-blue-400">eBook: {author.royaltyPercentages?.ebook !== undefined ? author.royaltyPercentages.ebook : (author.royaltyPercentage ?? 25)}%</span>
+                            <span className="text-purple-400">Audio: {author.royaltyPercentages?.audiobook !== undefined ? author.royaltyPercentages.audiobook : (author.royaltyPercentage ?? 25)}%</span>
+                            <span className="text-amber-400">Print: {author.royaltyPercentages?.hardcopy !== undefined ? author.royaltyPercentages.hardcopy : (author.royaltyPercentage ?? 25)}%</span>
+                          </div>
                         </td>
                         <td className="px-5 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
@@ -328,9 +347,60 @@ const AdminAuthors = () => {
                     </div>
                   )}
                   
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">eBook Royalty (%)</label>
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        max="100"
+                        value={form.royaltyPercentages?.ebook}
+                        onChange={(e) => setForm({ 
+                          ...form, 
+                          royaltyPercentages: { ...form.royaltyPercentages, ebook: Number(e.target.value) } 
+                        })}
+                        placeholder="25" 
+                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Audiobook (%)</label>
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        max="100"
+                        value={form.royaltyPercentages?.audiobook}
+                        onChange={(e) => setForm({ 
+                          ...form, 
+                          royaltyPercentages: { ...form.royaltyPercentages, audiobook: Number(e.target.value) } 
+                        })}
+                        placeholder="25" 
+                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Hardcopy (%)</label>
+                      <input 
+                        type="number" 
+                        required
+                        min="0"
+                        max="100"
+                        value={form.royaltyPercentages?.hardcopy}
+                        onChange={(e) => setForm({ 
+                          ...form, 
+                          royaltyPercentages: { ...form.royaltyPercentages, hardcopy: Number(e.target.value) } 
+                        })}
+                        placeholder="25" 
+                        className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                      />
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Royalty split (%)</label>
+                      <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">General/Fallback (%)</label>
                       <input 
                         type="number" 
                         required

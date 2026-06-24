@@ -19,6 +19,7 @@ const AdminSettings = () => {
     contactPhone: '',
     contactWhatsApp: '',
     contactAddress: '',
+    contactAddress2: '',
     contactHours: '',
     defaultRoyaltyPercentage: 25,
     autoApproveAuthors: false,
@@ -104,6 +105,7 @@ const AdminSettings = () => {
           contactPhone: data.contactPhone || '',
           contactWhatsApp: data.contactWhatsApp || '',
           contactAddress: data.contactAddress || '',
+          contactAddress2: data.contactAddress2 || '',
           contactHours: data.contactHours || '',
           defaultRoyaltyPercentage: data.defaultRoyaltyPercentage ?? 25,
           autoApproveAuthors: data.autoApproveAuthors ?? false,
@@ -277,6 +279,17 @@ const AdminSettings = () => {
                       type="text" 
                       name="contactAddress"
                       value={formData.contactAddress || ''}
+                      onChange={handleChange}
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Branch Address (Optional)</label>
+                    <input 
+                      type="text" 
+                      name="contactAddress2"
+                      value={formData.contactAddress2 || ''}
                       onChange={handleChange}
                       className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
                     />

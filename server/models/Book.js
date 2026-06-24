@@ -18,6 +18,7 @@ const bookSchema = new mongoose.Schema(
     coAuthor: { type: String },
     chiefEditor: { type: String },
     editor: { type: String },
+    coEditor: { type: String },
     description: { type: String, required: true },
     summaryEn: { type: String },
     summaryMr: { type: String },

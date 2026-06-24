@@ -376,7 +376,17 @@ const processSuccessfulPayment = async (orderId) => {
       const bookRecord = await Book.findById(item.book);
       if (bookRecord && bookRecord.author) {
         const authorUser = await User.findById(bookRecord.author);
-        const splitPct = authorUser && authorUser.royaltyPercentage !== undefined ? authorUser.royaltyPercentage : 25;
+        
+        let splitPct = 25;
+        if (authorUser) {
+          const formatKey = item.format ? item.format.toLowerCase() : '';
+          if (authorUser.royaltyPercentages && authorUser.royaltyPercentages[formatKey] !== undefined) {
+            splitPct = authorUser.royaltyPercentages[formatKey];
+          } else if (authorUser.royaltyPercentage !== undefined) {
+            splitPct = authorUser.royaltyPercentage;
+          }
+        }
+        
         const salesPrice = (item.price || 0) * (item.qty || 1);
         const royaltyAmount = salesPrice * (splitPct / 100);
         

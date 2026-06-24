@@ -80,6 +80,7 @@ const BookDetails = () => {
         coAuthor: data.coAuthor || '',
         chiefEditor: data.chiefEditor || '',
         editor: data.editor || '',
+        coEditor: data.coEditor || '',
         amazonLink: data.amazonLink || '',
         flipkartLink: data.flipkartLink || '',
         pothiLink: data.pothiLink || '',
@@ -826,6 +827,7 @@ const BookDetails = () => {
                         book.coAuthor && { label: book.coAuthor.includes(',') ? 'Co-Authors' : 'Co-Author', val: book.coAuthor },
                         book.chiefEditor && { label: 'Chief Editor', val: book.chiefEditor },
                         book.editor && { label: 'Editor', val: book.editor },
+                        book.coEditor && { label: 'Co-Editor', val: book.coEditor },
                       ].filter(Boolean).map((row, i) => (
                         <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors">
                            <th className="py-5 text-[#64748b] font-bold text-sm tracking-widest uppercase">{row.label}</th>

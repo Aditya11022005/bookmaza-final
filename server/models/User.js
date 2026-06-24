@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema(
     dob: { type: String },
     isAuthorApproved: { type: Boolean, default: false },
     royaltyPercentage: { type: Number, default: 25 },
+    royaltyPercentages: {
+      ebook: { type: Number, default: 25 },
+      audiobook: { type: Number, default: 25 },
+      hardcopy: { type: Number, default: 25 }
+    },
     purchasedBooks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }],
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }],
     followedAuthors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

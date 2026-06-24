@@ -58,7 +58,12 @@ const registerUser = async (req, res) => {
       bio: bio || '',
       website: website || '',
       isAuthorApproved: role === 'author' ? (settings.autoApproveAuthors ?? false) : true,
-      royaltyPercentage: role === 'author' ? (settings.defaultRoyaltyPercentage ?? 25) : 25
+      royaltyPercentage: role === 'author' ? (settings.defaultRoyaltyPercentage ?? 25) : 25,
+      royaltyPercentages: {
+        ebook: role === 'author' ? (settings.defaultRoyaltyPercentage ?? 25) : 25,
+        audiobook: role === 'author' ? (settings.defaultRoyaltyPercentage ?? 25) : 25,
+        hardcopy: role === 'author' ? (settings.defaultRoyaltyPercentage ?? 25) : 25
+      }
     });
     if (user) {
       // Send welcome email
@@ -253,6 +258,13 @@ const updateUser = async (req, res) => {
       if (req.body.role) user.role = req.body.role;
       if (req.body.isAuthorApproved !== undefined) user.isAuthorApproved = req.body.isAuthorApproved;
       if (req.body.royaltyPercentage !== undefined) user.royaltyPercentage = req.body.royaltyPercentage;
+      if (req.body.royaltyPercentages !== undefined) {
+        user.royaltyPercentages = {
+          ebook: req.body.royaltyPercentages.ebook !== undefined ? req.body.royaltyPercentages.ebook : user.royaltyPercentages.ebook,
+          audiobook: req.body.royaltyPercentages.audiobook !== undefined ? req.body.royaltyPercentages.audiobook : user.royaltyPercentages.audiobook,
+          hardcopy: req.body.royaltyPercentages.hardcopy !== undefined ? req.body.royaltyPercentages.hardcopy : user.royaltyPercentages.hardcopy
+        };
+      }
 
       const updatedUser = await user.save();
       res.json({
@@ -261,7 +273,8 @@ const updateUser = async (req, res) => {
         email: updatedUser.email,
         role: updatedUser.role,
         isAuthorApproved: updatedUser.isAuthorApproved,
-        royaltyPercentage: updatedUser.royaltyPercentage
+        royaltyPercentage: updatedUser.royaltyPercentage,
+        royaltyPercentages: updatedUser.royaltyPercentages
       });
     } else {
       res.status(404).json({ message: 'User not found' });

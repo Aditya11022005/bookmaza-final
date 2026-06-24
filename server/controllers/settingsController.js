@@ -44,6 +44,7 @@ export const updateSettings = async (req, res) => {
       contactPhone,
       contactWhatsApp,
       contactAddress,
+      contactAddress2,
       contactHours,
       defaultRoyaltyPercentage,
       autoApproveAuthors,
@@ -71,6 +72,7 @@ export const updateSettings = async (req, res) => {
     if (contactPhone !== undefined) settings.contactPhone = contactPhone;
     if (contactWhatsApp !== undefined) settings.contactWhatsApp = contactWhatsApp;
     if (contactAddress !== undefined) settings.contactAddress = contactAddress;
+    if (contactAddress2 !== undefined) settings.contactAddress2 = contactAddress2;
     if (contactHours !== undefined) settings.contactHours = contactHours;
     if (defaultRoyaltyPercentage !== undefined) settings.defaultRoyaltyPercentage = defaultRoyaltyPercentage;
     if (autoApproveAuthors !== undefined) settings.autoApproveAuthors = autoApproveAuthors;

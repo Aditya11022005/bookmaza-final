@@ -22,6 +22,10 @@ const AuthorUpload = () => {
   const [category, setCategory] = useState('');
   const [language, setLanguage] = useState('Marathi');
   const [pages, setPages] = useState('');
+  const [coAuthor, setCoAuthor] = useState('');
+  const [chiefEditor, setChiefEditor] = useState('');
+  const [editor, setEditor] = useState('');
+  const [coEditor, setCoEditor] = useState('');
   const [coverImage, setCoverImage] = useState('');
   
   // Format check state
@@ -152,6 +156,10 @@ const AuthorUpload = () => {
       coverImage,
       language,
       pages: pages ? Number(pages) : undefined,
+      coAuthor,
+      chiefEditor,
+      editor,
+      coEditor,
       formats: {
         ebook: {
           isAvailable: formatEbook,
@@ -294,6 +302,49 @@ const AuthorUpload = () => {
                 value={pages}
                 onChange={(e) => setPages(e.target.value)}
                 placeholder="e.g. 240" 
+                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-colors" 
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div>
+              <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Co-Author Name(s)</label>
+              <input 
+                type="text" 
+                value={coAuthor}
+                onChange={(e) => setCoAuthor(e.target.value)}
+                placeholder="Co-Author(s)" 
+                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-colors" 
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Chief Editor</label>
+              <input 
+                type="text" 
+                value={chiefEditor}
+                onChange={(e) => setChiefEditor(e.target.value)}
+                placeholder="Chief Editor" 
+                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-colors" 
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Editor</label>
+              <input 
+                type="text" 
+                value={editor}
+                onChange={(e) => setEditor(e.target.value)}
+                placeholder="Editor" 
+                className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-colors" 
+              />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-1.5">Co-Editor</label>
+              <input 
+                type="text" 
+                value={coEditor}
+                onChange={(e) => setCoEditor(e.target.value)}
+                placeholder="Co-Editor" 
                 className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-colors" 
               />
             </div>

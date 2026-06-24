@@ -161,6 +161,18 @@ const Contact = () => {
                         </div>
                      </div>
 
+                     {settings.contactAddress2 && (
+                        <div className="flex items-start gap-5">
+                           <div className="w-14 h-14 shrink-0 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center border border-primary-100 shadow-inner">
+                              <MapPin size={24}/>
+                           </div>
+                           <div>
+                              <span className="text-xs font-black text-[#64748b] uppercase tracking-widest block mb-1">Branch Office</span>
+                              <p className="text-lg font-bold text-[#1e293b] leading-snug">{settings.contactAddress2}</p>
+                           </div>
+                        </div>
+                     )}
+
                      {/* Hours Block */}
                      <div className="flex items-start gap-5">
                         <div className="w-14 h-14 shrink-0 bg-primary-50 text-primary-600 rounded-2xl flex items-center justify-center border border-primary-100 shadow-inner">

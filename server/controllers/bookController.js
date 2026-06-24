@@ -92,6 +92,7 @@ const createBook = async (req, res) => {
       coAuthor,
       chiefEditor,
       editor,
+      coEditor,
       amazonLink,
       flipkartLink,
       pothiLink,
@@ -111,6 +112,7 @@ const createBook = async (req, res) => {
       coAuthor,
       chiefEditor,
       editor,
+      coEditor,
       description,
       summaryEn: parsedSummaryEn,
       summaryMr: parsedSummaryMr,
@@ -205,6 +207,7 @@ const updateBook = async (req, res) => {
       coAuthor,
       chiefEditor,
       editor,
+      coEditor,
       amazonLink,
       flipkartLink,
       pothiLink,
@@ -260,6 +263,7 @@ const updateBook = async (req, res) => {
       book.coAuthor = coAuthor !== undefined ? coAuthor : book.coAuthor;
       book.chiefEditor = chiefEditor !== undefined ? chiefEditor : book.chiefEditor;
       book.editor = editor !== undefined ? editor : book.editor;
+      book.coEditor = coEditor !== undefined ? coEditor : book.coEditor;
       book.amazonLink = amazonLink !== undefined ? amazonLink : book.amazonLink;
       book.flipkartLink = flipkartLink !== undefined ? flipkartLink : book.flipkartLink;
       book.pothiLink = pothiLink !== undefined ? pothiLink : book.pothiLink;
