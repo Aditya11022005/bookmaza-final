@@ -254,6 +254,18 @@ export const AdminMessages = () => {
     }
   };
 
+  const handleDeleteMessage = async (id) => {
+    if (!window.confirm('Are you sure you want to permanently delete this contact message?')) return;
+    try {
+      await axios.delete(`/contact/${id}`);
+      toast.success('Message deleted successfully');
+      fetchMessages();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete message');
+    }
+  };
+
   const filteredMessages = messages.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -375,6 +387,13 @@ export const AdminMessages = () => {
                       Mark Unread
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDeleteMessage(msg._id)}
+                    className="inline-flex items-center gap-1.5 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                  >
+                    <Trash2 size={14} />
+                    Delete
+                  </button>
                 </div>
               </motion.div>
             ))
@@ -466,7 +485,7 @@ export const AdminReviews = () => {
 
   const fetchReviews = async () => {
     try {
-      const { data } = await axios.get('/books');
+      const { data } = await axios.get('/books?all=true');
       
       // Flatmap all reviews with book context details
       const flattenedReviews = data.flatMap(book => 

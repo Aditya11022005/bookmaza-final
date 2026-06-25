@@ -121,3 +121,21 @@ export const replyToContactMessage = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Delete contact message
+// @route   DELETE /api/contact/:id
+// @access  Private/Admin
+export const deleteContactMessage = async (req, res) => {
+  try {
+    const message = await ContactMessage.findById(req.params.id);
+    if (message) {
+      await ContactMessage.deleteOne({ _id: req.params.id });
+      res.json({ message: 'Message removed successfully' });
+    } else {
+      res.status(404).json({ message: 'Message not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
