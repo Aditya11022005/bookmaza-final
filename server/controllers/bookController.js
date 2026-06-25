@@ -107,7 +107,7 @@ const createBook = async (req, res) => {
 
     const book = new Book({
       title,
-      author: req.user._id,
+      author: (req.user.role === 'admin' && req.body.author) ? req.body.author : req.user._id,
       authorName: authorName || req.user.name,
       coAuthor,
       chiefEditor,
@@ -274,6 +274,10 @@ const updateBook = async (req, res) => {
     if (book) {
       if (req.user.role === 'author' && book.author.toString() !== req.user._id.toString()) {
         return res.status(403).json({ message: 'Not authorized to update this book' });
+      }
+
+      if (req.user.role === 'admin' && req.body.author) {
+        book.author = req.body.author;
       }
 
       book.title = title || book.title;

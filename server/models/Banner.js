@@ -4,7 +4,8 @@ const bannerSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     subtitle: { type: String },
-    image: { type: String, required: true },
+    image: { type: String },
+    videoUrl: { type: String },
     link: { type: String },
     buttonText: { type: String, default: 'Claim Your Offer' },
     type: { type: String, enum: ['hero', 'promo'], default: 'hero' },

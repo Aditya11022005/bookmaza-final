@@ -90,6 +90,54 @@ router.post('/image', protect, (req, res) => {
   });
 });
 
+// @desc    Upload public video (Banner Video)
+// @route   POST /api/upload/video
+router.post('/video', protect, (req, res) => {
+  uploadLocal.single('video')(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_CLOUD_NAME !== 'name';
+    
+    if (isCloudinaryConfigured) {
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: 'pustakmaza_media',
+          resource_type: 'video',
+        });
+        
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkErr) {
+          console.error('Failed to clean up temp file:', unlinkErr);
+        }
+        
+        return res.json({
+          message: 'Video uploaded successfully to Cloudinary',
+          url: result.secure_url,
+        });
+      } catch (uploadErr) {
+        console.warn('Cloudinary upload failed, falling back to local storage:', uploadErr.message);
+        const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        return res.json({
+          message: 'Video uploaded locally (Cloudinary failed)',
+          url,
+        });
+      }
+    } else {
+      const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      return res.json({
+        message: 'Video uploaded locally',
+        url,
+      });
+    }
+  });
+});
+
 // @desc    Upload protected file (PDF, MP3)
 // @route   POST /api/upload/protected
 router.post('/protected', protect, author, (req, res) => {

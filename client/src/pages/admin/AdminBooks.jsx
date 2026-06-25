@@ -65,6 +65,7 @@ const AdminBooks = () => {
   const [hardcopyPrice, setHardcopyPrice] = useState(0);
   const [hardcopyStock, setHardcopyStock] = useState(0);
 
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const fetchBooks = async () => {
@@ -90,9 +91,19 @@ const AdminBooks = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const { data } = await axios.get('/users');
+      setUsers(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchBooks();
     fetchCategories();
+    fetchUsers();
   }, []);
 
   const openAddModal = () => {
@@ -272,6 +283,10 @@ const AdminBooks = () => {
       combinedLaunchDate = new Date(year, month - 1, day, hours24, minutesVal).toISOString();
     }
 
+    const matchedUser = users.find(
+      (u) => u.name?.trim().toLowerCase() === authorName.trim().toLowerCase()
+    );
+
     const payload = {
       title,
       description,
@@ -288,6 +303,7 @@ const AdminBooks = () => {
       publishYear: publishYear ? Number(publishYear) : undefined,
       language,
       authorName,
+      author: matchedUser ? matchedUser._id : undefined,
       summaryEn,
       summaryMr,
       coAuthor,
@@ -816,9 +832,18 @@ const AdminBooks = () => {
                           type="text" 
                           value={authorName}
                           onChange={(e) => setAuthorName(e.target.value)}
-                          placeholder="Custom Author Name" 
+                          list="db-authors-list"
+                          placeholder="Custom or database Author Name" 
                           className="w-full bg-[#0f172a] border border-white/10 text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
                         />
+                        <datalist id="db-authors-list">
+                          {users
+                            .filter(u => u.role === 'author' || u.role === 'admin')
+                            .map(u => (
+                              <option key={u._id} value={u.name} />
+                            ))
+                          }
+                        </datalist>
                       </div>
                     </div>
 

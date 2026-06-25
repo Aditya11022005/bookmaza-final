@@ -13,6 +13,7 @@ const AdminBanners = () => {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [image, setImage] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [link, setLink] = useState('');
   const [buttonText, setButtonText] = useState('Claim Your Offer');
   const [type, setType] = useState('hero');
@@ -38,6 +39,7 @@ const AdminBanners = () => {
     setTitle('');
     setSubtitle('');
     setImage('');
+    setVideoUrl('');
     setLink('');
     setButtonText('Claim Your Offer');
     setType('hero');
@@ -50,6 +52,7 @@ const AdminBanners = () => {
     setTitle(banner.title || '');
     setSubtitle(banner.subtitle || '');
     setImage(banner.image || '');
+    setVideoUrl(banner.videoUrl || '');
     setLink(banner.link || '');
     setButtonText(banner.buttonText || 'Claim Your Offer');
     setType(banner.type || 'hero');
@@ -77,14 +80,34 @@ const AdminBanners = () => {
     }
   };
 
+  const handleUploadVideo = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('video', file);
+
+    const toastId = toast.loading('Uploading banner video...');
+    try {
+      const { data } = await axios.post('/upload/video', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Banner video uploaded!', { id: toastId });
+      setVideoUrl(data.url);
+    } catch (err) {
+      console.error(err);
+      toast.error('Video upload failed', { id: toastId });
+    }
+  };
+
   const handleSaveBanner = async (e) => {
     e.preventDefault();
-    if (!title || !image) {
-      toast.error('Title and banner image are required.');
+    if (!title || (!image && !videoUrl)) {
+      toast.error('Title and either banner image or video are required.');
       return;
     }
 
-    const payload = { title, subtitle, image, link, buttonText, type, isActive };
+    const payload = { title, subtitle, image, videoUrl, link, buttonText, type, isActive };
 
     setLoading(true);
     try {
@@ -156,7 +179,11 @@ const AdminBanners = () => {
               className="group flex flex-col md:flex-row gap-4 bg-[#0d1526] border border-white/[0.06] p-4 rounded-2xl hover:border-white/[0.12] transition-colors"
             >
               <div className="md:w-64 h-32 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 relative">
-                <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+                {banner.videoUrl ? (
+                  <video src={banner.videoUrl} muted className="w-full h-full object-cover" />
+                ) : (
+                  <img src={banner.image} alt={banner.title} className="w-full h-full object-cover" />
+                )}
               </div>
               
               <div className="flex-1 flex flex-col justify-between py-2">
@@ -278,6 +305,49 @@ const AdminBanners = () => {
                         onChange={(e) => setImage(e.target.value)}
                         className="w-full bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
                       />
+                    </div>
+                  </div>
+
+                  {/* Video URL & Video Upload Block */}
+                  <div className="border-t border-white/[0.06] pt-4">
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">Banner Video (Optional / Override)</label>
+                    <div className="flex gap-4">
+                      <div className="w-full h-36 bg-white/5 border border-white/10 rounded-xl flex flex-col items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-colors cursor-pointer border-dashed relative overflow-hidden group shrink-0 md:w-48">
+                        {videoUrl ? (
+                          <>
+                            <video src={videoUrl} muted className="w-full h-full object-cover" />
+                            <button 
+                              type="button" 
+                              onClick={(e) => { e.stopPropagation(); setVideoUrl(''); }}
+                              className="absolute top-2 right-2 p-1 bg-black/60 rounded-md text-white hover:bg-red-500 transition-colors"
+                            >
+                              <X size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Upload size={24} className="mb-2" />
+                            <span className="text-[10px] font-bold text-center px-2">Upload Video</span>
+                            <input 
+                              type="file" 
+                              accept="video/*"
+                              onChange={handleUploadVideo}
+                              className="absolute inset-0 opacity-0 cursor-pointer" 
+                            />
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="flex-grow space-y-2">
+                        <label className="block text-slate-500 text-[10px] font-bold uppercase tracking-widest">- OR -</label>
+                        <input 
+                          type="text" 
+                          placeholder="Paste Video URL directly" 
+                          value={videoUrl}
+                          onChange={(e) => setVideoUrl(e.target.value)}
+                          className="w-full bg-[#0f172a] border border-white/10 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary-500/50"
+                        />
+                      </div>
                     </div>
                   </div>
                   

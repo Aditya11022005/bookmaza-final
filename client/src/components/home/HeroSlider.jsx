@@ -75,14 +75,25 @@ const HeroSlider = ({ banners = [] }) => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary-900/90 via-primary-800/60 to-transparent z-10 pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 via-transparent to-transparent z-10 opacity-50 pointer-events-none" />
           
-          <img
-            src={getOptimizedImageUrl(slides[current].image || slides[current].coverImage, 1200)}
-            alt="Hero Background"
-            className="w-full h-full object-cover pointer-events-none"
-            draggable="false"
-            fetchPriority={current === 0 ? "high" : "auto"}
-            loading={current === 0 ? "eager" : "lazy"}
-          />
+          {slides[current].videoUrl ? (
+            <video
+              src={slides[current].videoUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            />
+          ) : (
+            <img
+              src={getOptimizedImageUrl(slides[current].image || slides[current].coverImage, 1200)}
+              alt="Hero Background"
+              className="w-full h-full object-cover pointer-events-none"
+              draggable="false"
+              fetchPriority={current === 0 ? "high" : "auto"}
+              loading={current === 0 ? "eager" : "lazy"}
+            />
+          )}
           
           {/* Content Block */}
           <div className="absolute inset-0 z-20 flex items-center pointer-events-none">
