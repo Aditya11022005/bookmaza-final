@@ -126,6 +126,59 @@ const AdminLayout = () => {
   const [searchData, setSearchData] = useState({ books: [], orders: [], users: [] });
   const [loadingSearch, setLoadingSearch] = useState(false);
 
+  // Notifications Dropdown State
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+      const [usersRes, contactRes] = await Promise.all([
+        axios.get('/users'),
+        axios.get('/contact')
+      ]);
+
+      const pendingAuthors = (usersRes.data || [])
+        .filter(u => u.role === 'author' && !u.isAuthorApproved)
+        .map(u => ({
+          id: `author-${u._id}`,
+          type: 'author',
+          title: 'Pending Author Approval',
+          message: `${u.name} is waiting for author approval.`,
+          path: '/admin/dashboard/authors',
+          date: u.createdAt || new Date()
+        }));
+
+      const pendingMessages = (contactRes.data || [])
+        .filter(m => m.status === 'pending')
+        .map(m => ({
+          id: `msg-${m._id}`,
+          type: 'message',
+          title: `Support: ${m.subject}`,
+          message: `From ${m.name}: "${m.message.slice(0, 45)}..."`,
+          path: '/admin/dashboard/messages',
+          date: m.createdAt || new Date()
+        }));
+
+      const combined = [...pendingAuthors, ...pendingMessages].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+
+      setNotifications(combined);
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const allActions = [
     { name: 'Go to Dashboard', path: '/admin/dashboard', desc: 'Overview and platform sales reports' },
     { name: 'Books Catalog', path: '/admin/dashboard/books', desc: 'Upload and edit ebooks, audiobooks or physical books' },
@@ -369,10 +422,79 @@ const AdminLayout = () => {
           </button>
 
           {/* Notifications */}
-          <button className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all">
-            <Bell size={17} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-500 rounded-full border border-[#111827]" />
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                fetchNotifications(); // Refresh on click
+              }}
+              className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.04] border border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.08] transition-all"
+            >
+              <Bell size={17} />
+              {notifications.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-primary-500 rounded-full border border-[#111827]" />
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showNotifications && (
+                <>
+                  {/* Backdrop overlay to close when clicking outside */}
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-80 bg-[#0d1526]/95 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 flex flex-col"
+                  >
+                    <div className="px-4 py-3.5 border-b border-white/[0.08] flex items-center justify-between">
+                      <span className="text-white text-xs font-bold uppercase tracking-wider">Notifications ({notifications.length})</span>
+                      <button 
+                        onClick={fetchNotifications}
+                        className="text-[10px] text-primary-400 hover:text-primary-300 font-bold"
+                      >
+                        Refresh
+                      </button>
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto divide-y divide-white/[0.04] scrollbar-thin">
+                      {loadingNotifications && notifications.length === 0 ? (
+                        <div className="p-6 text-center text-slate-500 text-xs flex flex-col items-center gap-2">
+                          <div className="w-4 h-4 rounded-full border-2 border-primary-500/20 border-t-primary-500 animate-spin" />
+                          <span>Checking notifications...</span>
+                        </div>
+                      ) : notifications.length > 0 ? (
+                        notifications.map((n) => (
+                          <div 
+                            key={n.id}
+                            onClick={() => {
+                              setShowNotifications(false);
+                              navigate(n.path);
+                            }}
+                            className="p-3.5 hover:bg-white/[0.02] cursor-pointer transition-colors flex flex-col gap-1 text-left"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-white text-xs font-bold truncate">{n.title}</span>
+                              <span className="text-[9px] text-slate-500 shrink-0 font-semibold">
+                                {new Date(n.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                            <p className="text-slate-400 text-[11px] leading-relaxed line-clamp-2">{n.message}</p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-8 text-center text-slate-500 text-xs font-medium">
+                          No pending notifications
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Avatar */}
           <div className="flex items-center gap-3 pl-2 border-l border-white/[0.06]">
