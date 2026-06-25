@@ -134,32 +134,40 @@ const AdminLayout = () => {
   const fetchNotifications = async () => {
     try {
       setLoadingNotifications(true);
-      const [usersRes, contactRes] = await Promise.all([
-        axios.get('/users'),
-        axios.get('/contact')
-      ]);
+      let pendingAuthors = [];
+      let pendingMessages = [];
 
-      const pendingAuthors = (usersRes.data || [])
-        .filter(u => u.role === 'author' && !u.isAuthorApproved)
-        .map(u => ({
-          id: `author-${u._id}`,
-          type: 'author',
-          title: 'Pending Author Approval',
-          message: `${u.name} is waiting for author approval.`,
-          path: '/admin/dashboard/authors',
-          date: u.createdAt || new Date()
-        }));
+      try {
+        const usersRes = await axios.get('/users');
+        pendingAuthors = (usersRes.data || [])
+          .filter(u => u.role === 'author' && !u.isAuthorApproved)
+          .map(u => ({
+            id: `author-${u._id}`,
+            type: 'author',
+            title: 'Pending Author Approval',
+            message: `${u.name} is waiting for author approval.`,
+            path: '/admin/dashboard/authors',
+            date: u.createdAt || new Date()
+          }));
+      } catch (userErr) {
+        console.error('Failed to load users for notifications:', userErr);
+      }
 
-      const pendingMessages = (contactRes.data || [])
-        .filter(m => m.status === 'pending')
-        .map(m => ({
-          id: `msg-${m._id}`,
-          type: 'message',
-          title: `Support: ${m.subject}`,
-          message: `From ${m.name}: "${m.message.slice(0, 45)}..."`,
-          path: '/admin/dashboard/messages',
-          date: m.createdAt || new Date()
-        }));
+      try {
+        const contactRes = await axios.get('/contact');
+        pendingMessages = (contactRes.data || [])
+          .filter(m => m.status === 'pending')
+          .map(m => ({
+            id: `msg-${m._id}`,
+            type: 'message',
+            title: `Support: ${m.subject}`,
+            message: `From ${m.name}: "${m.message.slice(0, 45)}..."`,
+            path: '/admin/dashboard/messages',
+            date: m.createdAt || new Date()
+          }));
+      } catch (contactErr) {
+        console.error('Failed to load contacts for notifications:', contactErr);
+      }
 
       const combined = [...pendingAuthors, ...pendingMessages].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
@@ -167,7 +175,7 @@ const AdminLayout = () => {
 
       setNotifications(combined);
     } catch (err) {
-      console.error('Failed to load notifications:', err);
+      console.error('Failed to process notifications:', err);
     } finally {
       setLoadingNotifications(false);
     }
