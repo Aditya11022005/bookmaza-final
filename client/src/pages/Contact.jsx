@@ -23,6 +23,7 @@ const Contact = () => {
     contactPhone: '+91 93224 65522',
     contactWhatsApp: '919322465522',
     contactAddress: 'Pustak Maza HQ, Pune, Maharashtra, India',
+    contactAddress2: '',
     contactHours: 'Mon - Sat: 9:00 AM - 6:00 PM'
   });
 
@@ -38,6 +39,7 @@ const Contact = () => {
             contactPhone: data.contactPhone || '+91 93224 65522',
             contactWhatsApp: data.contactWhatsApp || '919322465522',
             contactAddress: data.contactAddress || 'Pustak Maza HQ, Pune, Maharashtra, India',
+            contactAddress2: data.contactAddress2 || '',
             contactHours: data.contactHours || 'Mon - Sat: 9:00 AM - 6:00 PM'
           });
         }

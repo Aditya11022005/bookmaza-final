@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { 
@@ -23,9 +23,30 @@ const AuthorLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Route protection
+  const isAuthor = user && user.role === 'author';
+  const isApproved = user && user.isAuthorApproved;
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/author/login', { replace: true });
+    } else if (!isAuthor) {
+      toast.error('Access denied. This area is reserved for authors.');
+      navigate('/', { replace: true });
+    } else if (!isApproved) {
+      toast.error('Your author account is pending admin approval.');
+      navigate('/author/login', { replace: true });
+    }
+  }, [user, isAuthor, isApproved, navigate]);
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
+
+  if (!isAuthor || !isApproved) {
+    return null; // Prevent UI rendering while redirecting
+  }
+
 
   const currentTitle = PAGE_TITLES[location.pathname] || 'Author Studio';
   const authorName = user?.name || 'Jane Doe';

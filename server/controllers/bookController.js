@@ -137,6 +137,61 @@ const createBook = async (req, res) => {
 
     const createdBook = await book.save();
 
+    // Asynchronously send notification email to Admin about the new book upload
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@pustakmaza.com';
+    const adminHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b1329; color: #ffffff;">
+        <h2 style="color: #a855f7; text-align: center; font-size: 24px; font-weight: 800; margin-bottom: 20px;">New Book Uploaded! 📚</h2>
+        <p style="font-size: 16px; line-height: 1.6; color: #cbd5e1;">Hi Admin,</p>
+        <p style="font-size: 14px; line-height: 1.6; color: #94a3b8;">An author has successfully uploaded a new book to the platform.</p>
+        
+        <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #334155;">
+          <h3 style="color: #a855f7; margin-top: 0; font-size: 18px;">Book Details</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #cbd5e1;">
+            <tr>
+              <td style="padding: 6px 0; font-weight: bold; width: 120px; color: #94a3b8;">Title:</td>
+              <td style="padding: 6px 0;">${title}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Author:</td>
+              <td style="padding: 6px 0;">${createdBook.authorName} (${req.user.email})</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Language:</td>
+              <td style="padding: 6px 0;">${createdBook.language}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 0; font-weight: bold; color: #94a3b8;">Status:</td>
+              <td style="padding: 6px 0;">
+                <span style="color: ${createdBook.isPublished ? '#10b981' : '#f59e0b'}; font-weight: bold;">
+                  ${createdBook.isPublished ? 'Published & Live' : 'Draft / Pending'}
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        ${coverImage ? `
+        <div style="text-align: center; margin: 20px 0;">
+          <img src="${coverImage}" alt="${title}" style="max-height: 200px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); border: 1px solid #334155;" />
+        </div>
+        ` : ''}
+
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin/books" style="background-color: #a855f7; color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 700; text-decoration: none; border-radius: 8px; display: inline-block;">Manage Books in Admin Panel</a>
+        </div>
+        <p style="font-size: 11px; color: #64748b; text-align: center; margin-top: 25px; border-top: 1px solid #334155; padding-top: 15px;">Pustak Maza Automatic Notification Service</p>
+      </div>
+    `;
+
+    sendEmail({
+      email: adminEmail,
+      subject: `🔔 Notification: New Book "${title}" Uploaded by ${createdBook.authorName}`,
+      html: adminHtml
+    }).catch(mailErr => {
+      console.error('Admin book notification email failed to send:', mailErr.message);
+    });
+
     // Asynchronously send notification emails to all registered customers about the new book launch
     if (createdBook.isPublished) {
       User.find({ role: 'customer' }).select('email name')

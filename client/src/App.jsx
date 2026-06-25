@@ -73,7 +73,7 @@ const MyAccount = () => <div className="p-10 text-center text-3xl font-bold">My 
 const Page404 = () => <div className="p-20 text-center text-5xl font-black text-gray-300">404 - Page Not Found</div>;
 
 // Stub Admin Pages
-const AdminPlaceholder = ({title}) => <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[500px]"><h2 className="text-3xl font-bold text-gray-800">{title}</h2><p className="text-gray-500 mt-2 font-medium">Module is currently being scaffolded.</p></div>;
+const AdminPlaceholder = ({ title }) => <div className="p-8 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[500px]"><h2 className="text-3xl font-bold text-gray-800">{title}</h2><p className="text-gray-500 mt-2 font-medium">Module is currently being scaffolded.</p></div>;
 
 const App = () => {
   return (
@@ -85,7 +85,7 @@ const App = () => {
         </div>
       }>
         <Routes>
-          
+
           {/* Core Application / Storefront */}
           <Route path="/" element={<RootLayout />}>
             <Route index element={<Home />} />
@@ -101,19 +101,19 @@ const App = () => {
             <Route path="checkout" element={<Checkout />} />
             <Route path="order-success" element={<OrderSuccess />} />
             <Route path="subscriptions" element={<Subscriptions />} />
-            
+
             {/* Protected Account Routes */}
             <Route element={<ProtectedRoute />}>
-               <Route element={<AccountLayout />}>
-                  <Route path="account" element={<Navigate to="/profile" replace />} />
-                  <Route path="profile" element={<MyProfile />} />
+              <Route element={<AccountLayout />}>
+                <Route path="account" element={<Navigate to="/profile" replace />} />
+                <Route path="profile" element={<MyProfile />} />
                 <Route path="orders" element={<MyOrders />} />
                 <Route path="orders/:id" element={<OrderDetails />} />
                 <Route path="library" element={<Library />} />
-                  <Route path="wishlist" element={<Wishlist />} />
-               </Route>
+                <Route path="wishlist" element={<Wishlist />} />
+              </Route>
             </Route>
-            
+
             <Route path="about" element={<About />} />
             <Route path="contact" element={<Contact />} />
             <Route path="faq" element={<FAQ />} />
@@ -121,7 +121,7 @@ const App = () => {
             <Route path="terms" element={<Terms />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
             <Route path="shipping-policy" element={<ShippingPolicy />} />
-            
+
             <Route path="login" element={<Login />} />
             <Route path="register" element={<Register />} />
             <Route path="forgot-password" element={<ForgotPassword />} />
@@ -130,17 +130,17 @@ const App = () => {
             <Route path="verify-email" element={<VerifyEmail />} />
             <Route path="*" element={<Page404 />} />
           </Route>
-          
+
           {/* Fullscreen Media Players */}
           <Route path="/read/:id" element={<EbookReader />} />
           <Route path="/listen/:id" element={<AudioPlayer />} />
-          
+
           {/* Admin Dashboard */}
           {/* /admin       → redirects to /admin/dashboard (via ProtectedAdminRoute) */}
           {/* /admin/login → public login page */}
           {/* /admin/dashboard/* → protected */}
           <Route path="/admin/login" element={<AdminLogin />} />
-          
+
           <Route path="/admin" element={<ProtectedAdminRoute />}>
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="dashboard" element={<AdminLayout />}>
@@ -161,13 +161,14 @@ const App = () => {
               <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>
-  
+
           {/* Author Portal */}
           <Route path="/author/login" element={<AuthorLogin />} />
           <Route path="/author/apply" element={<AuthorApplication />} />
-          
+
           <Route path="/author" element={<AuthorLayout />}>
             <Route index element={<Navigate to="/author/dashboard" replace />} />
+
             <Route path="dashboard" element={<AuthorDashboard />} />
             <Route path="books" element={<AuthorBooks />} />
             <Route path="upload" element={<AuthorUpload />} />
@@ -176,7 +177,7 @@ const App = () => {
             <Route path="reviews" element={<AdminPlaceholder title="Fan Reviews" />} />
             <Route path="profile" element={<AuthorProfile />} />
           </Route>
-  
+
         </Routes>
       </Suspense>
     </Router>

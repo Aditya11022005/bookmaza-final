@@ -82,7 +82,7 @@ const Home = () => {
       </div>
 
       {/* 7. Readership Verification */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 pb-16">
+      <div className="hidden md:block max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 pb-16">
         <Testimonials />
       </div>
 
