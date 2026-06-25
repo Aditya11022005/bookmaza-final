@@ -1,10 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Layers, Briefcase, Heart, Cpu, Coffee, Sparkles } from 'lucide-react';
-
-const iconMap = {
-  fiction: Heart, science: Cpu, business: Briefcase, romance: Heart,
-  biography: Coffee, history: Layers, 'self-help': Sparkles, defaults: Layers
-};
+import { getCategoryIcon } from '../../utils/categoryHelper';
 
 const CategoryGrid = ({ categories = [] }) => {
   const cats = categories;
@@ -28,7 +23,7 @@ const CategoryGrid = ({ categories = [] }) => {
       {/* Grid */}
       <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
         {cats.slice(0, 6).map((cat) => {
-          const Icon = iconMap[cat.slug?.toLowerCase()] || iconMap.defaults;
+          const Icon = getCategoryIcon(cat.name);
           return (
             <Link
               key={cat.name}

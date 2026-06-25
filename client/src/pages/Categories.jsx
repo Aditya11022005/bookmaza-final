@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, LayoutGrid, Search, Loader } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getCategoryEmoji } from '../utils/categoryHelper';
 
 const gradients = [
   'bg-gradient-to-br from-primary-900 to-primary-600',
@@ -96,7 +97,7 @@ const Categories = () => {
               {filteredCategories.length > 0 ? (
                 filteredCategories.map((cat, idx) => {
                   const bg = gradients[idx % gradients.length];
-                  const icon = icons[idx % icons.length];
+                  const icon = getCategoryEmoji(cat.name);
                   const desc = cat.description || `Explore our handpicked collection of stories, wisdom, and educational materials in ${cat.name}.`;
                   const count = getBookCount(cat._id);
 

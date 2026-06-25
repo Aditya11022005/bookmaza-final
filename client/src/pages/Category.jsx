@@ -9,6 +9,7 @@ import BookSlider from '../components/home/BookSlider';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
 import { getOptimizedImageUrl } from '../utils/image';
+import { getCategoryEmoji } from '../utils/categoryHelper';
 
 // ==========================================
 // PREDEFINED METADATA FOR BANNERS
@@ -59,11 +60,14 @@ const Category = () => {
 
   // Resolve Category Names
   const formatSlug = slug ? slug.toLowerCase().replace(/-/g, ' ') : '';
+  const matchedCategoryObj = categories.find(c => c.slug?.toLowerCase() === slug?.toLowerCase());
+  const categoryNameForEmoji = matchedCategoryObj ? matchedCategoryObj.name : formatSlug;
+
   const meta = CATEGORY_META[slug?.toLowerCase()] || {
      title: `${formatSlug.charAt(0).toUpperCase() + formatSlug.slice(1)} Books`,
      desc: `Explore our comprehensively curated array of ${formatSlug} literature and format options.`,
      bg: 'bg-gradient-to-r from-primary-900 via-[#1e293b] to-[#0f172a]',
-     icon: '📚'
+     icon: getCategoryEmoji(categoryNameForEmoji)
   };
 
   const activeCategoryStr = useMemo(() => {
