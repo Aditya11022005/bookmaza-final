@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Shield, Ban, CheckCircle2, X, Loader } from 'lucide-react';
+import { Search, Plus, Shield, Ban, CheckCircle2, X, Loader, Trash2 } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -46,6 +46,20 @@ const AdminUsers = () => {
       toast.error(err.response?.data?.message || 'Failed to create user');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user "${user.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await axios.delete(`/users/${user._id}`);
+      toast.success('User deleted successfully');
+      fetchUsers();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -115,6 +129,7 @@ const AdminUsers = () => {
                   <th className="px-5 py-4 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">ID</th>
                   <th className="px-5 py-4 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Role</th>
                   <th className="px-5 py-4 text-left text-[11px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Joined</th>
+                  <th className="px-5 py-4 text-right text-[11px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -151,11 +166,21 @@ const AdminUsers = () => {
                       <td className="px-5 py-4 text-slate-500 text-xs font-medium whitespace-nowrap">
                         {new Date(user.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleDeleteUser(user)}
+                            className="p-1.5 text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 rounded-lg transition-colors inline-flex items-center gap-1 text-xs font-bold"
+                          >
+                            <Trash2 size={14} /> Delete
+                          </button>
+                        </div>
+                      </td>
                     </motion.tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-5 py-12 text-center text-slate-500 font-medium">
+                    <td colSpan="5" className="px-5 py-12 text-center text-slate-500 font-medium">
                       No registered users match your filters.
                     </td>
                   </tr>
