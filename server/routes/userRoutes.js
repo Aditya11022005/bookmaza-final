@@ -1,7 +1,7 @@
 import express from 'express';
 import { check } from 'express-validator';
 const router = express.Router();
-import { authUser, registerUser, getUserProfile, updateUserProfile, getUsers, toggleWishlist, updateUser, forgotPassword, verifyResetOTP, resetPassword, googleLogin } from '../controllers/userController.js';
+import { authUser, registerUser, getUserProfile, updateUserProfile, getUsers, toggleWishlist, updateUser, forgotPassword, verifyResetOTP, resetPassword, googleLogin, deleteUser } from '../controllers/userController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import { validateRequest } from '../middleware/validationMiddleware.js';
 
@@ -31,6 +31,6 @@ router.post('/verifyotp', verifyResetOTP);
 router.post('/resetpassword', resetPassword);
 router.post('/google-login', googleLogin);
 
-router.route('/:id').put(protect, admin, updateUser);
+router.route('/:id').put(protect, admin, updateUser).delete(protect, admin, deleteUser);
 
 export default router;

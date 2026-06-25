@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, BookOpen, Award, X, Loader, Edit3, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Search, Plus, BookOpen, Award, X, Loader, Edit3, CheckCircle2, AlertTriangle, ShieldAlert, Trash2 } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -59,6 +59,20 @@ const AdminAuthors = () => {
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || 'Failed to update author approval');
+    }
+  };
+
+  const handleDeleteAuthor = async (author) => {
+    if (!window.confirm(`Are you sure you want to permanently delete author "${author.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    try {
+      await axios.delete(`/users/${author._id}`);
+      toast.success('Author deleted successfully');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete author');
     }
   };
 
@@ -260,12 +274,20 @@ const AdminAuthors = () => {
                           {new Date(author.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
                         <td className="px-5 py-4 text-right">
-                          <button 
-                            onClick={() => handleEditAuthor(author)}
-                            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors inline-flex items-center gap-1 text-xs font-bold"
-                          >
-                            <Edit3 size={14} /> Edit
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => handleEditAuthor(author)}
+                              className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors inline-flex items-center gap-1 text-xs font-bold"
+                            >
+                              <Edit3 size={14} /> Edit
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAuthor(author)}
+                              className="p-1.5 text-rose-400 hover:text-rose-350 hover:bg-rose-500/10 rounded-lg transition-colors inline-flex items-center gap-1 text-xs font-bold"
+                            >
+                              <Trash2 size={14} /> Delete
+                            </button>
+                          </div>
                         </td>
                       </motion.tr>
                     );

@@ -9,7 +9,8 @@ import {
   getOrders,
   createPaymentIntent,
   createRazorpayOrder,
-  verifyRazorpayPayment
+  verifyRazorpayPayment,
+  deleteOrder
 } from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
@@ -18,7 +19,7 @@ router.route('/myorders').get(protect, getMyOrders);
 router.route('/payment-intent').post(protect, createPaymentIntent);
 router.route('/razorpay-order').post(protect, createRazorpayOrder);
 router.route('/razorpay-verify').post(protect, verifyRazorpayPayment);
-router.route('/:id').get(protect, getOrderById);
+router.route('/:id').get(protect, getOrderById).delete(protect, admin, deleteOrder);
 router.route('/:id/pay').put(protect, updateOrderToPaid);
 router.route('/:id/deliver').put(protect, admin, updateOrderToDelivered);
 

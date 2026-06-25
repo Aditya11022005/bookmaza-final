@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Eye, Filter, CheckCircle2, Clock, XCircle, Truck, Loader, X, Calendar, MapPin, CreditCard, ShoppingBag, Mail, Phone, Download, User as UserIcon } from 'lucide-react';
+import { Search, Eye, Filter, CheckCircle2, Clock, XCircle, Truck, Loader, X, Calendar, MapPin, CreditCard, ShoppingBag, Mail, Phone, Download, User as UserIcon, Trash2 } from 'lucide-react';
 import axios from '../../api/axios';
 import { toast } from 'sonner';
 
@@ -42,6 +42,20 @@ const AdminOrders = () => {
       toast.error('Failed to fetch orders');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await axios.delete(`/orders/${orderId}`);
+      toast.success('Order deleted successfully');
+      fetchOrders();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to delete order');
     }
   };
 
@@ -298,6 +312,14 @@ const AdminOrders = () => {
                           {order.isDelivered && (
                             <span className="text-slate-500 text-xs font-bold uppercase tracking-wider pl-2">Fulfilled</span>
                           )}
+
+                          <button 
+                            onClick={() => handleDeleteOrder(order._id)}
+                            className="inline-flex items-center justify-center p-2 bg-rose-950/30 hover:bg-rose-600 text-rose-400 hover:text-white rounded-lg transition-colors border border-rose-500/20"
+                            title="Delete Order"
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -600,6 +622,19 @@ const AdminOrders = () => {
                         </>
                       );
                     })()}
+
+                    {/* Delete Order Action */}
+                    <div className="pt-4 border-t border-rose-500/20">
+                      <button
+                        onClick={() => {
+                          handleDeleteOrder(selectedOrder._id);
+                          setSelectedOrder(null);
+                        }}
+                        className="w-full py-2.5 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 rounded-xl font-bold text-sm transition-colors"
+                      >
+                        Delete Order Permanently
+                      </button>
+                    </div>
 
                   </div>
 
