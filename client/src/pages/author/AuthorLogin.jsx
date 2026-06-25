@@ -171,14 +171,7 @@ const AuthorLogin = () => {
               </button>
             </form>
 
-            <div className="mt-10 text-center lg:text-left border-t border-gray-100 pt-6">
-              <p className="text-[#64748b] font-medium text-[15px]">
-                Want to become an author?{' '}
-                <Link to="/author/apply" className="font-bold text-primary-600 hover:text-primary-800 transition-colors relative inline-block after:content-[''] after:absolute after:w-full after:h-[2px] after:bg-primary-600 after:left-0 after:bottom-[-2px] after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:origin-left lg:ml-1">
-                  Apply for Publishing
-                </Link>
-              </p>
-            </div>
+
             
           </div>
         </div>

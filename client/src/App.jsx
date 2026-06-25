@@ -164,7 +164,7 @@ const App = () => {
 
           {/* Author Portal */}
           <Route path="/author/login" element={<AuthorLogin />} />
-          <Route path="/author/apply" element={<AuthorApplication />} />
+          <Route path="/author/apply" element={<Navigate to="/author/login" replace />} />
 
           <Route path="/author" element={<AuthorLayout />}>
             <Route index element={<Navigate to="/author/dashboard" replace />} />
