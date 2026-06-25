@@ -6,6 +6,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import useOrderStore from '../store/orderStore';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
+
 
 const FormatBadge = ({ format }) => {
   if (format === 'Ebook') return <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-xs font-black uppercase tracking-widest border border-blue-100"><BookOpen size={14}/> Ebook</span>;
@@ -134,7 +136,7 @@ const MyOrders = () => {
           >
              {/* Product Image */}
              <div className="w-full md:w-32 h-44 md:h-auto rounded-xl overflow-hidden shadow-sm shrink-0 border border-gray-100 bg-gray-50 flex items-center justify-center">
-                <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img src={getOptimizedImageUrl(item.image, 150)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
              </div>
 
              {/* Order Info */}

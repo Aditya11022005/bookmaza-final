@@ -6,11 +6,19 @@ import User from '../models/User.js';
 import sendEmail from '../utils/sendEmail.js';
 import { translateToMarathi } from '../utils/translator.js';
 import { cloudinary } from '../utils/cloudinary.js';
+import { cache } from '../utils/cache.js';
+
 
 // @desc    Fetch all books
 // @route   GET /api/books
 const getBooks = async (req, res) => {
   try {
+    const cacheKey = `books:list:${JSON.stringify(req.query)}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const keyword = req.query.keyword
       ? { title: { $regex: req.query.keyword, $options: 'i' } }
       : {};
@@ -31,6 +39,7 @@ const getBooks = async (req, res) => {
       query = query.select('title subtitle authorName coverImage category formats rating numReviews price isPublished createdAt');
     }
     const books = await query.populate('category', 'name slug');
+    cache.set(cacheKey, books);
     res.json(books);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -41,6 +50,12 @@ const getBooks = async (req, res) => {
 // @route   GET /api/books/:id
 const getBookById = async (req, res) => {
   try {
+    const cacheKey = `books:id:${req.params.id}`;
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const book = await Book.findById(req.params.id)
       .populate('category', 'name slug')
       .populate('author', 'name email');
@@ -56,7 +71,9 @@ const getBookById = async (req, res) => {
       }
       if (needsSave) {
         await book.save();
+        cache.clearPrefix('books:list');
       }
+      cache.set(cacheKey, book);
       res.json(book);
     } else {
       res.status(404).json({ message: 'Book not found' });
@@ -136,6 +153,7 @@ const createBook = async (req, res) => {
     });
 
     const createdBook = await book.save();
+    cache.clearPrefix('books:');
 
     // Asynchronously send notification email to Admin about the new book upload
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@pustakmaza.com';
@@ -344,6 +362,7 @@ const updateBook = async (req, res) => {
 
       book.markModified('formats');
       const updatedBook = await book.save();
+      cache.clearPrefix('books:');
       res.json(updatedBook);
     } else {
       res.status(404).json({ message: 'Book not found' });
@@ -365,6 +384,7 @@ const deleteBook = async (req, res) => {
       }
       
       await book.deleteOne();
+      cache.clearPrefix('books:');
       res.json({ message: 'Book removed' });
     } else {
       res.status(404).json({ message: 'Book not found' });
@@ -403,6 +423,7 @@ const createBookReview = async (req, res) => {
       book.rating = book.reviews.reduce((acc, item) => item.rating + acc, 0) / book.reviews.length;
 
       await book.save();
+      cache.clearPrefix('books:');
       res.status(201).json({ message: 'Review added' });
     } else {
       res.status(404).json({ message: 'Book not found' });
@@ -436,6 +457,7 @@ const deleteBookReview = async (req, res) => {
       : 0;
 
     await book.save();
+    cache.clearPrefix('books:');
     res.json({ message: 'Review deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -552,6 +574,12 @@ const proxyPdf = async (req, res) => {
 // @route   GET /api/books/announcement
 const getAnnouncementBook = async (req, res) => {
   try {
+    const cacheKey = 'books:announcement';
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const books = await Book.find({
       isAnnounced: true,
       launchDate: { $gt: new Date() }
@@ -559,6 +587,7 @@ const getAnnouncementBook = async (req, res) => {
     .sort({ launchDate: 1 })
     .populate('category', 'name slug');
 
+    cache.set(cacheKey, books);
     res.json(books);
   } catch (error) {
     res.status(500).json({ message: error.message });

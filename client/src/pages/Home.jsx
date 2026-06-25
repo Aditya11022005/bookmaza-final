@@ -54,7 +54,7 @@ const Home = () => {
         <BookSlider 
           title="Trending Now" 
           subtitle="Discover what readers are obsessed with this month." 
-          books={featuredBooks} 
+          books={featuredBooks.slice(0, 10)} 
           badge="TRENDING" 
         />
       </div>
@@ -65,7 +65,7 @@ const Home = () => {
           <BookSlider 
             title="Best Sellers" 
             subtitle="Our highest-rated titles across all genres." 
-            books={[...featuredBooks].reverse()} 
+            books={[...featuredBooks].reverse().slice(0, 10)} 
             badge="BESTSELLER"
           />
         </div>

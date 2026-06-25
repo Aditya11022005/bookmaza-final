@@ -6,6 +6,8 @@ import useOrderStore from '../store/orderStore';
 import { toast } from 'sonner';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
+
 
 const OrderDetails = () => {
    usePageMeta('Order Details', 'View your Pustak Maza order summary, delivery status, and purchased items.');
@@ -398,7 +400,7 @@ const OrderDetails = () => {
                         {orderItemsList.map((item, idx) => (
                            <div key={`${item.book}-${item.format}-${idx}`} className="flex flex-col sm:flex-row gap-6 p-4 rounded-3xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group">
                               <div className="w-24 h-36 rounded-2xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
-                                 <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                 <img src={getOptimizedImageUrl(item.image, 150)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                               </div>
                               <div className="flex-1 flex flex-col justify-between py-1">
                                  <div>

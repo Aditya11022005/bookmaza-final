@@ -3,7 +3,7 @@ import zlib from 'zlib';
 export const compressionMiddleware = (req, res, next) => {
   const acceptEncoding = req.headers['accept-encoding'] || '';
   
-  if (!acceptEncoding.includes('gzip') && !acceptEncoding.includes('deflate')) {
+  if (!acceptEncoding.includes('br') && !acceptEncoding.includes('gzip') && !acceptEncoding.includes('deflate')) {
     return next();
   }
 
@@ -11,8 +11,18 @@ export const compressionMiddleware = (req, res, next) => {
   const originalEnd = res.end;
   const originalWriteHead = res.writeHead;
   let chunks = [];
-  let compressionMethod = acceptEncoding.includes('gzip') ? 'gzip' : 'deflate';
+  
+  let compressionMethod = null;
+  if (acceptEncoding.includes('br') && typeof zlib.brotliCompressSync === 'function') {
+    compressionMethod = 'br';
+  } else if (acceptEncoding.includes('gzip')) {
+    compressionMethod = 'gzip';
+  } else if (acceptEncoding.includes('deflate')) {
+    compressionMethod = 'deflate';
+  }
+  
   let isHeadersChecked = false;
+
 
   const checkHeadersForCompression = () => {
     if (isHeadersChecked) return;
@@ -85,9 +95,14 @@ export const compressionMiddleware = (req, res, next) => {
     }
 
     try {
-      const compressed = compressionMethod === 'gzip' 
-        ? zlib.gzipSync(buffer) 
-        : zlib.deflateSync(buffer);
+      let compressed;
+      if (compressionMethod === 'br') {
+        compressed = zlib.brotliCompressSync(buffer);
+      } else if (compressionMethod === 'gzip') {
+        compressed = zlib.gzipSync(buffer);
+      } else {
+        compressed = zlib.deflateSync(buffer);
+      }
 
       res.setHeader('Content-Length', compressed.length);
       return originalEnd.call(this, compressed, callback);

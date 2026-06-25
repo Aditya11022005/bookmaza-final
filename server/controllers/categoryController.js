@@ -1,10 +1,17 @@
 import Category from '../models/Category.js';
+import { cache } from '../utils/cache.js';
 
 // @desc    Get all categories
 // @route   GET /api/categories
 const getCategories = async (req, res) => {
   try {
+    const cacheKey = 'categories:list';
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
     const categories = await Category.find({});
+    cache.set(cacheKey, categories);
     res.json(categories);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -23,6 +30,7 @@ const createCategory = async (req, res) => {
     }
 
     const category = await Category.create({ name, slug });
+    cache.clearPrefix('categories:');
     res.status(201).json(category);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -36,6 +44,7 @@ const deleteCategory = async (req, res) => {
     const category = await Category.findById(req.params.id);
     if (category) {
       await category.deleteOne();
+      cache.clearPrefix('categories:');
       res.json({ message: 'Category removed' });
     } else {
       res.status(404).json({ message: 'Category not found' });

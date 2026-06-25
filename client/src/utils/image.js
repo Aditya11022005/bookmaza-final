@@ -37,6 +37,34 @@ export const getOptimizedImageUrl = (url, width = 400) => {
 };
 
 /**
+ * Generates an optimized src and srcSet configuration for responsive images.
+ * Works with Cloudinary and Unsplash URLs, falling back to clean resolved URLs for other media.
+ *
+ * @param {string} url - The original image URL.
+ * @param {number[]} widths - Array of widths for responsive resizing.
+ * @returns {object} - Object with src and srcSet properties.
+ */
+export const getOptimizedImageSrcSet = (url, widths = [150, 300, 600, 900]) => {
+  if (!url || typeof url !== 'string') return { src: '' };
+
+  const resolved = resolveMediaUrl(url);
+
+  if (!url.includes('cloudinary.com') && !url.includes('images.unsplash.com')) {
+    return { src: resolved };
+  }
+
+  const srcSet = widths
+    .map((w) => `${getOptimizedImageUrl(url, w)} ${w}w`)
+    .join(', ');
+
+  return {
+    src: getOptimizedImageUrl(url, widths[1] || 300),
+    srcSet,
+  };
+};
+
+
+/**
  * Resolves local, absolute localhost, or relative media URLs to point to the correct backend host.
  *
  * @param {string} url - The original media URL.

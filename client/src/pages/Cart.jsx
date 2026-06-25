@@ -3,6 +3,7 @@ import useCartStore from '../store/cartStore';
 import useAuthStore from '../store/authStore';
 import { Trash2, ShoppingBag, Package, BookOpen, Headphones, ArrowRight, ShieldCheck } from 'lucide-react';
 import usePageMeta from '../hooks/usePageMeta';
+import { getOptimizedImageUrl } from '../utils/image';
 
 const formatIcon = { hardcopy: Package, ebook: BookOpen, audiobook: Headphones };
 
@@ -60,7 +61,7 @@ const Cart = () => {
                       <div className="w-16 h-24 sm:w-20 sm:h-28 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
                         {img ? (
                           <img
-                            src={img}
+                            src={getOptimizedImageUrl(img, 150)}
                             alt={item.title}
                             className="w-full h-full object-cover"
                             onError={(e) => { e.target.style.display = 'none'; }}

@@ -8,6 +8,8 @@ import useCartStore from '../store/cartStore';
 import useOrderStore from '../store/orderStore';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
+import { getOptimizedImageUrl } from '../utils/image';
+
 
 const Checkout = () => {
   usePageMeta('Checkout', 'Complete your Pustak Maza purchase. Secure checkout with multiple payment options.');
@@ -121,15 +123,7 @@ const Checkout = () => {
   const shipping = hasHardcopy ? shippingCost : 0;
   const total = afterDiscount + tax + shipping;
 
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -216,6 +210,28 @@ const Checkout = () => {
       }
 
       // Handle Online Payment (Razorpay)
+      const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+          if (window.Razorpay) {
+            resolve(true);
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.async = true;
+          script.onload = () => resolve(true);
+          script.onerror = () => resolve(false);
+          document.body.appendChild(script);
+        });
+      };
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast.error("Failed to load Razorpay SDK. Please check your internet connection.");
+        setIsProcessing(false);
+        return;
+      }
+
       const { data: rzpOrder } = await axios.post('/orders/razorpay-order', { amount: total });
 
       const options = {
@@ -490,7 +506,7 @@ const Checkout = () => {
                     {checkoutItems.map((item, index) => (
                        <div key={index} className="flex gap-4 group">
                           <div className="w-16 h-24 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0 shadow-sm relative">
-                             <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                             <img src={getOptimizedImageUrl(item.image, 150)} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                           </div>
                           <div className="flex-1 flex flex-col justify-center">
                              <h4 className="font-bold text-[15px] leading-tight line-clamp-2 mb-1 text-[#1e293b]">{item.title}</h4>

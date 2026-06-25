@@ -4,6 +4,8 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, Package, ArrowRight, BookOpen, ShieldCheck, Download, CreditCard, Wallet, Play } from 'lucide-react';
 import useOrderStore from '../store/orderStore';
 import usePageMeta from '../hooks/usePageMeta';
+import { getOptimizedImageUrl } from '../utils/image';
+
 
 const OrderSuccess = () => {
   usePageMeta('Order Confirmed', 'Your Pustak Maza order has been placed successfully. Access your digital books or track your shipment.');
@@ -109,7 +111,7 @@ const OrderSuccess = () => {
                <div className="flex flex-wrap justify-center gap-4">
                   {order.items.map((item, idx) => (
                      <div key={idx} className="relative group cursor-pointer w-20 h-28 shrink-0">
-                        <img src={item.image} alt="cover" className="w-full h-full object-cover rounded-xl shadow-sm border border-gray-200 group-hover:scale-110 group-hover:shadow-xl group-hover:border-primary-400 transition-all duration-300 relative z-10"/>
+                        <img src={getOptimizedImageUrl(item.image, 150)} alt="cover" className="w-full h-full object-cover rounded-xl shadow-sm border border-gray-200 group-hover:scale-110 group-hover:shadow-xl group-hover:border-primary-400 transition-all duration-300 relative z-10"/>
                         <div className="absolute -bottom-2 -right-2 bg-gray-800 text-white text-[10px] font-black w-6 h-6 rounded-full flex items-center justify-center z-20 border-2 border-white shadow-md">{item.qty || item.quantity || 1}</div>
                      </div>
                   ))}

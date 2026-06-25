@@ -6,7 +6,7 @@ import useCartStore from '../store/cartStore';
 import { toast } from 'sonner';
 import usePageMeta from '../hooks/usePageMeta';
 import axios from '../api/axios';
-import { getOptimizedImageUrl } from '../utils/image';
+import { getOptimizedImageUrl, getOptimizedImageSrcSet } from '../utils/image';
 
 export const CATEGORIES = ['Fiction', 'Science Fiction', 'Self-Help', 'History', 'Business', 'Biography', 'Romance', 'Science'];
 export const FORMATS = [{ id: 'ebook', label: 'Ebook' }, { id: 'audiobook', label: 'Audiobook' }, { id: 'hardcopy', label: 'Hardcopy' }];
@@ -215,7 +215,12 @@ const Shop = () => {
          {/* Full Bleed Image Block */}
          <div className="w-full aspect-[2/3] relative overflow-hidden bg-[#f8fafc] shrink-0 border-b border-[#f1f5f9]">
            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
-           <img src={getOptimizedImageUrl(book.coverImage, 300)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" />
+            <img 
+              {...getOptimizedImageSrcSet(book.coverImage, [150, 300, 600])}
+              sizes="(max-width: 640px) 150px, 300px"
+              alt={book.title} 
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out relative z-0" 
+            />
          </div>
          
          <div className="p-3 sm:p-5 flex flex-col flex-grow relative z-20">

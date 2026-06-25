@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from '../../api/axios';
+import { getOptimizedImageUrl } from '../../utils/image';
+
 
 // Tiny SVG sparkline
 const Sparkline = ({ data, up }) => {
@@ -478,7 +480,7 @@ const AdminDashboard = () => {
                 className="group bg-[#0d1526] border border-white/[0.06] rounded-2xl p-4 flex gap-4 hover:border-white/[0.14] transition-all"
               >
                 <div className="w-14 h-20 rounded-xl overflow-hidden shrink-0 bg-white/5 border border-white/[0.06] shadow-lg">
-                  <img src={book.coverImage} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src={getOptimizedImageUrl(book.coverImage, 150)} alt={book.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <div className="min-w-0 flex flex-col justify-between flex-grow">
                   <div>
