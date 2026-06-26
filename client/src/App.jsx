@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { Analytics } from '@vercel/analytics/react';
 import RootLayout from './layouts/RootLayout';
 import AdminLayout from './layouts/AdminLayout';
 import AuthorLayout from './layouts/AuthorLayout';
@@ -181,6 +182,7 @@ const App = () => {
 
         </Routes>
         <SpeedInsights />
+        <Analytics />
       </Suspense>
     </Router>
   );
