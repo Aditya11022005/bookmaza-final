@@ -49,7 +49,11 @@ export const updateSettings = async (req, res) => {
       defaultRoyaltyPercentage,
       autoApproveAuthors,
       razorpayKeyId,
-      razorpayKeySecret
+      razorpayKeySecret,
+      socialInstagram,
+      socialFacebook,
+      socialTwitter,
+      socialYoutube
     } = req.body;
     
     let settings = await Settings.findOne({});
@@ -78,6 +82,10 @@ export const updateSettings = async (req, res) => {
     if (autoApproveAuthors !== undefined) settings.autoApproveAuthors = autoApproveAuthors;
     if (razorpayKeyId !== undefined) settings.razorpayKeyId = razorpayKeyId;
     if (razorpayKeySecret !== undefined) settings.razorpayKeySecret = razorpayKeySecret;
+    if (socialInstagram !== undefined) settings.socialInstagram = socialInstagram;
+    if (socialFacebook !== undefined) settings.socialFacebook = socialFacebook;
+    if (socialTwitter !== undefined) settings.socialTwitter = socialTwitter;
+    if (socialYoutube !== undefined) settings.socialYoutube = socialYoutube;
 
     const updatedSettings = await settings.save();
     

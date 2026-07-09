@@ -24,7 +24,11 @@ const AdminSettings = () => {
     defaultRoyaltyPercentage: 25,
     autoApproveAuthors: false,
     razorpayKeyId: '',
-    razorpayKeySecret: ''
+    razorpayKeySecret: '',
+    socialFacebook: '',
+    socialInstagram: '',
+    socialTwitter: '',
+    socialYoutube: ''
   });
 
   const [hasConnection, setHasConnection] = useState(false);
@@ -110,7 +114,11 @@ const AdminSettings = () => {
           defaultRoyaltyPercentage: data.defaultRoyaltyPercentage ?? 25,
           autoApproveAuthors: data.autoApproveAuthors ?? false,
           razorpayKeyId: data.razorpayKeyId || '',
-          razorpayKeySecret: data.razorpayKeySecret ? '********' : ''
+          razorpayKeySecret: data.razorpayKeySecret ? '********' : '',
+          socialFacebook: data.socialFacebook || '',
+          socialInstagram: data.socialInstagram || '',
+          socialTwitter: data.socialTwitter || '',
+          socialYoutube: data.socialYoutube || ''
         });
         setHasConnection(!!(data.shiprocketEmail && data.shiprocketPassword));
       }
@@ -312,6 +320,58 @@ const AdminSettings = () => {
                       <option value="INR">INR (₹)</option>
                       <option value="USD">USD ($)</option>
                     </select>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/[0.06] mt-6">
+                    <h3 className="text-sm font-bold text-primary-400 mb-4">Social Media Links</h3>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Facebook Page URL</label>
+                    <input 
+                      type="text" 
+                      name="socialFacebook"
+                      value={formData.socialFacebook || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. https://facebook.com/pustakmaza"
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Instagram Profile URL</label>
+                    <input 
+                      type="text" 
+                      name="socialInstagram"
+                      value={formData.socialInstagram || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. https://instagram.com/pustakmaza"
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">Twitter / X URL</label>
+                    <input 
+                      type="text" 
+                      name="socialTwitter"
+                      value={formData.socialTwitter || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. https://twitter.com/pustakmaza"
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2">YouTube Channel URL</label>
+                    <input 
+                      type="text" 
+                      name="socialYoutube"
+                      value={formData.socialYoutube || ''}
+                      onChange={handleChange}
+                      placeholder="e.g. https://youtube.com/@pustakmaza"
+                      className="w-full bg-[#0f172a] border border-white/[0.06] text-white text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary-500/50" 
+                    />
                   </div>
                 </div>
               </div>

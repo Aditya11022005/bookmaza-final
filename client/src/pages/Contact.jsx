@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Phone, Mail, MapPin, Clock, Send, MessageCircle, ArrowRight, Building2, BookOpen } from 'lucide-react';
+import { Phone, Mail, MapPin, Clock, Send, MessageCircle, ArrowRight, Building2, BookOpen, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import usePageMeta from '../hooks/usePageMeta';
@@ -24,7 +24,11 @@ const Contact = () => {
     contactWhatsApp: '919322465522',
     contactAddress: 'Pustak Maza HQ, Pune, Maharashtra, India',
     contactAddress2: '',
-    contactHours: 'Mon - Sat: 9:00 AM - 6:00 PM'
+    contactHours: 'Mon - Sat: 9:00 AM - 6:00 PM',
+    socialFacebook: '',
+    socialInstagram: '',
+    socialTwitter: '',
+    socialYoutube: ''
   });
 
   useEffect(() => {
@@ -40,7 +44,11 @@ const Contact = () => {
             contactWhatsApp: data.contactWhatsApp || '919322465522',
             contactAddress: data.contactAddress || 'Pustak Maza HQ, Pune, Maharashtra, India',
             contactAddress2: data.contactAddress2 || '',
-            contactHours: data.contactHours || 'Mon - Sat: 9:00 AM - 6:00 PM'
+            contactHours: data.contactHours || 'Mon - Sat: 9:00 AM - 6:00 PM',
+            socialFacebook: data.socialFacebook || '',
+            socialInstagram: data.socialInstagram || '',
+            socialTwitter: data.socialTwitter || '',
+            socialYoutube: data.socialYoutube || ''
           });
         }
       } catch (err) {
@@ -77,15 +85,17 @@ const Contact = () => {
     <div className="min-h-screen bg-[#f8fafc] w-full font-inter relative pb-20">
       
       {/* Absolute Floating WhatsApp Button (Global to viewport) */}
-      <button 
-        onClick={handleWhatsApp}
+      <a 
+        href={`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I want to know more about ${settings.storeName}.`)}`}
+        target="_blank"
+        rel="noopener noreferrer"
         className="fixed bottom-8 right-8 z-[100] bg-[#25D366] text-white p-4 rounded-full shadow-[0_10px_25px_-5px_rgba(37,211,102,0.5)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center group"
       >
          <WhatsAppIcon size={32}/>
          <span className="absolute right-full mr-4 bg-white text-[#1e293b] text-sm font-bold px-4 py-2 rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap">
            Chat on WhatsApp
          </span>
-      </button>
+      </a>
 
       {/* ======================================= */}
       {/* 1. MASSIVE HERO PAGE HEADER */}
@@ -126,7 +136,7 @@ const Contact = () => {
                         </div>
                         <div>
                            <span className="text-xs font-black text-[#64748b] uppercase tracking-widest block mb-1">Direct Call</span>
-                           <a href={`tel:${settings.contactPhone}`} className="text-xl font-bold text-[#1e293b] hover:text-primary-600 transition-colors">{settings.contactPhone}</a>
+                           <a href={`tel:${settings.contactPhone.replace(/[^0-9+]/g, '')}`} className="text-xl font-bold text-[#1e293b] hover:text-primary-600 transition-colors">{settings.contactPhone}</a>
                         </div>
                      </div>
 
@@ -137,7 +147,14 @@ const Contact = () => {
                         </div>
                         <div>
                            <span className="text-xs font-black text-[#64748b] uppercase tracking-widest block mb-1">WhatsApp Chat</span>
-                           <a href="#!" onClick={(e) => {e.preventDefault(); handleWhatsApp();}} className="text-xl font-bold text-[#1e293b] hover:text-[#25D366] transition-colors">+{settings.contactWhatsApp}</a>
+                           <a 
+                             href={`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I want to know more about ${settings.storeName}.`)}`} 
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="text-xl font-bold text-[#1e293b] hover:text-[#25D366] transition-colors"
+                           >
+                             {settings.contactWhatsApp.startsWith('+') ? '' : '+'}{settings.contactWhatsApp}
+                           </a>
                         </div>
                      </div>
 
@@ -185,6 +202,35 @@ const Contact = () => {
                            <p className="text-lg font-bold text-[#1e293b]">{settings.contactHours}</p>
                         </div>
                      </div>
+
+                     {/* Social Media Links Block */}
+                     {(settings.socialFacebook || settings.socialInstagram || settings.socialTwitter || settings.socialYoutube) && (
+                        <div className="pt-8 border-t border-gray-100 mt-2">
+                           <span className="text-xs font-black text-[#64748b] uppercase tracking-widest block mb-4">Follow Us</span>
+                           <div className="flex gap-4">
+                              {settings.socialFacebook && (
+                                 <a href={settings.socialFacebook} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#1877F2]/10 text-[#1877F2] rounded-xl flex items-center justify-center border border-[#1877F2]/20 hover:bg-[#1877F2] hover:text-white transition-colors" title="Facebook">
+                                    <Facebook size={20} />
+                                 </a>
+                              )}
+                              {settings.socialInstagram && (
+                                 <a href={settings.socialInstagram} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#E1306C]/10 text-[#E1306C] rounded-xl flex items-center justify-center border border-[#E1306C]/20 hover:bg-[#E1306C] hover:text-white transition-colors" title="Instagram">
+                                    <Instagram size={20} />
+                                 </a>
+                              )}
+                              {settings.socialTwitter && (
+                                 <a href={settings.socialTwitter} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#1DA1F2]/10 text-[#1DA1F2] rounded-xl flex items-center justify-center border border-[#1DA1F2]/20 hover:bg-[#1DA1F2] hover:text-white transition-colors" title="Twitter / X">
+                                    <Twitter size={20} />
+                                 </a>
+                              )}
+                              {settings.socialYoutube && (
+                                 <a href={settings.socialYoutube} target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#FF0000]/10 text-[#FF0000] rounded-xl flex items-center justify-center border border-[#FF0000]/20 hover:bg-[#FF0000] hover:text-white transition-colors" title="YouTube">
+                                    <Youtube size={20} />
+                                 </a>
+                              )}
+                           </div>
+                        </div>
+                     )}
 
                   </div>
                </div>
@@ -251,9 +297,14 @@ const Contact = () => {
                   </div>
                   <h4 className="text-3xl font-black font-poppins mb-4">Publishing & General Inquiries</h4>
                   <p className="text-gray-300 text-lg font-medium leading-[1.8] mb-8">For book-related inquiries, publication opportunities, enterprise partnerships, or general technical support, feel free to reach out to us securely. {settings.storeName} represents a leading pipeline for modern regional and distribution protocols.</p>
-                  <button onClick={handleWhatsApp} className="w-fit bg-[#25D366] text-white font-black px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-[#20bd5a] transition-colors shadow-md active:scale-95">
+                  <a 
+                    href={`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I want to know more about ${settings.storeName}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-fit bg-[#25D366] text-white font-black px-8 py-4 rounded-xl flex items-center gap-3 hover:bg-[#20bd5a] transition-colors shadow-md active:scale-95"
+                  >
                     <WhatsAppIcon size={22}/> Chat on WhatsApp directly
-                  </button>
+                  </a>
                </div>
             </div>
 
@@ -280,9 +331,14 @@ const Contact = () => {
                   <a href={`mailto:${settings.supportEmail}`} className="w-full sm:flex-1 bg-primary-600 text-white font-black text-lg py-5 px-8 rounded-2xl hover:bg-primary-700 shadow-lg hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3">
                     <Mail size={22}/> Send Email
                   </a>
-                  <button onClick={handleWhatsApp} className="w-full sm:flex-1 bg-white border-2 border-[#25D366] text-[#25D366] font-black text-lg py-5 px-8 rounded-2xl hover:bg-[#25D366] hover:text-white shadow-md hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3">
+                  <a 
+                    href={`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I want to know more about ${settings.storeName}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:flex-1 bg-white border-2 border-[#25D366] text-[#25D366] font-black text-lg py-5 px-8 rounded-2xl hover:bg-[#25D366] hover:text-white shadow-md hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3"
+                  >
                     <WhatsAppIcon size={22}/> WhatsApp Chat
-                  </button>
+                  </a>
                </div>
             </div>
          </div>

@@ -18,7 +18,11 @@ const settingsSchema = new mongoose.Schema(
     defaultRoyaltyPercentage: { type: Number, default: 25 },
     autoApproveAuthors: { type: Boolean, default: false },
     razorpayKeyId: { type: String, default: '' },
-    razorpayKeySecret: { type: String, default: '' }
+    razorpayKeySecret: { type: String, default: '' },
+    socialInstagram: { type: String, default: '' },
+    socialFacebook: { type: String, default: '' },
+    socialTwitter: { type: String, default: '' },
+    socialYoutube: { type: String, default: '' }
   },
   { timestamps: true }
 );
